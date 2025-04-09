@@ -51,10 +51,12 @@ A web application built with Next.js, React, and TypeScript that uses AI (via Op
 4.  **Run the development server:**
     ```bash
     npm run dev
-    # or
-    # yarn dev
-    # or
-    # pnpm dev
+    ```
+
+    **Run the production server:**
+    ```bash
+    npm run build
+    npm start
     ```
 
 5.  Open [http://localhost:3000](http://localhost:3000) (or your configured port) in your browser.
