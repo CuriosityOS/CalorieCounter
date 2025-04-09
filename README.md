@@ -43,7 +43,7 @@ A web application built with Next.js, React, and TypeScript that uses AI (via Op
         NEXT_PUBLIC_OPENROUTER_API_KEY="YOUR_OPENROUTER_API_KEY_HERE"
 
         # Optional: Set these if deploying or running on a different port
-        # NEXT_PUBLIC_SITE_URL="http://localhost:3000" # Your app's URL
+        # NEXT_PUBLIC_SITE_URL="http://localhost:5000" # Your app's URL
         # NEXT_PUBLIC_APP_TITLE="CalorieCounter"
         ```
     *   **Important:** The `.env.local` file is included in `.gitignore` and should **not** be committed to version control.
@@ -59,7 +59,7 @@ A web application built with Next.js, React, and TypeScript that uses AI (via Op
     npm start
     ```
 
-5.  Open [http://localhost:3000](http://localhost:3000) (or your configured port) in your browser.
+5.  Open [http://localhost:5000](http://localhost:5000) (or your configured port) in your browser.
 
 ## Tech Stack
 
