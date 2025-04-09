@@ -80,4 +80,4 @@ Contributions are welcome! Please feel free to open an issue or submit a pull re
 
 ## License
 
-This project is open source. (Consider adding a specific license like MIT if desired).
+This project is open source.
