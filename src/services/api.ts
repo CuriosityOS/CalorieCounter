@@ -120,10 +120,66 @@ export const analyzeImage = async (imageBase64: string): Promise<NutritionInfo> 
   }
 
   const apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
-  const model = 'google/gemini-2.0-flash-001'; // Updated model name
+  const model = 'google/gemini-2.5-flash-preview'; // Updated to new model
 
-  // Updated prompt to request mealName and ingredients
-  const promptText = `Analyze this food image. Identify the main dish(es) shown and list the primary ingredients. Provide estimated nutritional information (calories, protein, carbs, fat) for the entire portion shown. Respond ONLY with a valid JSON object containing keys: "mealName" (string or array of strings for the dish name(s)), "ingredients" (array of strings for primary ingredients), "calories" (number), "protein" (number), "carbs" (number), and "fat" (number). Example: {"mealName": "Cheeseburger", "ingredients": ["Beef Patty", "Bun", "Cheese", "Lettuce", "Tomato"], "calories": 800, "protein": 40, "carbs": 70, "fat": 45}`;
+  // Check if this is a text-only analysis request
+  const isTextAnalysis = imageBase64.startsWith('TEXTONLY_');
+  
+  // Prepare prompt based on the type of analysis
+  let promptText;
+  if (isTextAnalysis) {
+    // Extract the actual text from the Base64 string
+    const encodedText = imageBase64.substring('TEXTONLY_'.length);
+    const decodedText = Buffer.from(encodedText, 'base64').toString('utf-8');
+    
+    // Improved prompt for text description analysis with portion considerations
+    promptText = `Based on this food description: "${decodedText}", analyze the meal carefully.
+
+TASKS:
+1. Identify the main dish(es) and estimate the portion size based on the description.
+2. List all mentioned ingredients and infer likely ingredients if not explicitly stated.
+3. If the description mentions any sizing (small, medium, large) or quantities, use that information.
+4. Provide realistic nutritional information for the described portion.
+
+If the text includes any corrections or updates to a previous analysis, prioritize those changes.
+
+Respond ONLY with a valid JSON object containing:
+- "mealName": string or array of strings for dish name(s)
+- "ingredients": array of strings listing primary ingredients 
+- "portionSize": estimated portion size (small/medium/large)
+- "calories": number (total calories)
+- "protein": number (grams)
+- "carbs": number (grams) 
+- "fat": number (grams)
+
+Example: {"mealName": "Salmon with Rice and Vegetables", "ingredients": ["Salmon Fillet", "Brown Rice", "Broccoli", "Carrots", "Olive Oil"], "portionSize": "medium", "calories": 550, "protein": 35, "carbs": 45, "fat": 25}`;
+  } else {
+    // Improved prompt for image analysis with portion size and scale considerations
+    promptText = `Analyze this food image carefully. 
+
+TASKS:
+1. Identify the main dish(es) shown and estimate the portion size (small, medium, large).
+2. List all visible primary ingredients.
+3. Consider the scale/size of the food relative to plate or utensils if visible.
+4. Provide realistic nutritional information for the exact portion shown.
+
+Considerations for accurate estimates:
+- Look for size references (plates, utensils, hands) to gauge portion size
+- Consider standard serving sizes for similar dishes
+- Account for visible oils, sauces, and toppings
+- Be conservative with estimates if uncertain
+
+Respond ONLY with a valid JSON object containing:
+- "mealName": string or array of strings for dish name(s)
+- "ingredients": array of strings listing primary ingredients
+- "portionSize": estimated portion size (small/medium/large)
+- "calories": number (total calories)
+- "protein": number (grams)
+- "carbs": number (grams)
+- "fat": number (grams)
+
+Example: {"mealName": "Cheeseburger with Fries", "ingredients": ["Beef Patty", "Burger Bun", "Cheese", "Lettuce", "Tomato", "French Fries"], "portionSize": "large", "calories": 950, "protein": 35, "carbs": 80, "fat": 55}`;
+  }
 
 
   try {
@@ -137,18 +193,21 @@ export const analyzeImage = async (imageBase64: string): Promise<NutritionInfo> 
       },
       body: JSON.stringify({
         model: model,
+        temperature: 0, // Set temperature to 0 for maximum determinism/precision
         messages: [
           {
             role: 'user',
-            content: [
-              { type: 'text', text: promptText }, // Use updated prompt
-              {
-                type: 'image_url',
-                image_url: {
-                  url: `data:image/jpeg;base64,${imageBase64}`
-                }
-              }
-            ]
+            content: isTextAnalysis 
+              ? [{ type: 'text', text: promptText }]  // Text-only analysis
+              : [  // Image analysis
+                  { type: 'text', text: promptText },
+                  {
+                    type: 'image_url',
+                    image_url: {
+                      url: `data:image/jpeg;base64,${imageBase64}`
+                    }
+                  }
+                ]
           }
         ],
       })

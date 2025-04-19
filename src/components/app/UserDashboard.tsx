@@ -1,14 +1,28 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { motion } from 'framer-motion';
 import ImageUploader from './ImageUploader';
 import NutritionDisplay from './NutritionDisplay';
 import MealHistory from './MealHistory';
+import NutritionDashboard from './NutritionDashboard';
+import FoodDescriptionAnalyzer from './FoodDescriptionAnalyzer';
+import ManualFoodEntry from './ManualFoodEntry';
 import { useAnalyzeImage } from '@/hooks/useAnalyzeImage';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { UtensilsCrossed, Camera } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
-
-const UserDashboard: React.FC = () => {
+export default function UserDashboard() {
   const analyzeImageMutation = useAnalyzeImage();
+  const router = useRouter();
+  
+  // Force prefetch of key pages
+  useEffect(() => {
+    router.prefetch('/history');
+    router.prefetch('/customize');
+    console.log('Prefetching history and customize routes');
+  }, [router]);
 
   const {
     data: analysisResult,
@@ -22,31 +36,82 @@ const UserDashboard: React.FC = () => {
     triggerAnalysis(base64Image);
   };
 
-  return (
-    <div className="w-full max-w-4xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6 text-center">Your Nutrition Dashboard</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <section>
-          <ImageUploader onUpload={handleImageUpload} isAnalyzing={isAnalyzing} />
-        </section>
-        <section className="bg-card p-4 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4">Analysis Result</h2>
-          <NutritionDisplay
-            data={analysisResult ?? null}
-            isLoading={isAnalyzing}
-            error={analysisError}
-          />
-        </section>
-        <section className="md:col-span-2 bg-card p-4 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4">Meal History</h2>
-          <MealHistory />
-        </section>
-      </div>
-      <div className="mt-8 text-center">
-        <p>Settings Placeholder</p>
-      </div>
-    </div>
-  );
-};
+  const containerAnimation = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  };
 
-export default UserDashboard;
+  const itemAnimation = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 },
+  };
+
+  return (
+    <motion.div
+      variants={containerAnimation}
+      initial="hidden"
+      animate="show"
+      className="space-y-6"
+    >
+      {/* Nutrition overview */}
+      <motion.div variants={itemAnimation}>
+        <NutritionDashboard />
+      </motion.div>
+      
+      {/* Debug components removed */}
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Food Tracking Methods */}
+        <motion.div variants={itemAnimation} className="space-y-6">
+          {/* Image Analysis */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center">
+                <Camera className="w-5 h-5 mr-2 text-primary" />
+                Analyze Food Image
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ImageUploader onUpload={handleImageUpload} isAnalyzing={isAnalyzing} />
+              
+              <div className="mt-6">
+                <h3 className="text-lg font-medium mb-3">Analysis Result</h3>
+                <NutritionDisplay
+                  data={analysisResult ?? null}
+                  isLoading={isAnalyzing}
+                  error={analysisError}
+                />
+              </div>
+            </CardContent>
+          </Card>
+          
+          {/* Text Description Analysis */}
+          <FoodDescriptionAnalyzer />
+          
+          {/* Manual Food Entry */}
+          <ManualFoodEntry />
+        </motion.div>
+        
+        {/* Today's Meals */}
+        <motion.div variants={itemAnimation}>
+          <Card className="h-full">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center">
+                <UtensilsCrossed className="w-5 h-5 mr-2 text-primary" />
+                Today&apos;s Meals
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <MealHistory limit={5} showTitle={false} className="border-0 shadow-none" />
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    </motion.div>
+  );
+}
