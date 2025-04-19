@@ -53,12 +53,9 @@ export default function SignupPage() {
     
     try {
       await signUp(email, password);
-      setSuccessMessage('Account created! Please check your email to confirm your registration.');
-      // Clear fields
-      setEmail('');
-      setPassword('');
-      setConfirmPassword('');
+      // Success! User will be automatically redirected to home page
     } catch (err) {
+      // Show the actual error message from the API
       setAuthError(err instanceof Error ? err.message : 'An error occurred during signup');
     }
   };
