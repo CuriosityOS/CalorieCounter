@@ -19,10 +19,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     storageKey: 'caloriecounter-auth',
     flowType: 'pkce', // Use PKCE flow for better security
     // Set debug to true in non-production environment
-    debug: process.env.NODE_ENV !== 'production',
-    // Disable email confirmation completely
-    shouldCreateUser: true,
-    autoConfirmEmail: true
+    debug: process.env.NODE_ENV !== 'production'
   }
 });
 
