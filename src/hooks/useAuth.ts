@@ -70,42 +70,23 @@ export function useAuth(): UseAuthReturn {
         return;
       }
       
-      // If sign-in fails, create account with direct API call to bypass confirmation
-      // Skip the normal signUp method which requires confirmation
-      const response = await fetch(`${supabase.supabaseUrl}/auth/v1/signup`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': supabase.supabaseKey,
-        },
-        body: JSON.stringify({
-          email,
-          password,
-          data: { email_confirmed: true },
-          gotrue_meta_security: { captcha_token: "exempt" }
-        })
-      });
-      
-      const result = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(result.msg || result.error || 'Failed to create account');
-      }
-      
-      console.log('Account created:', result);
-      
-      // Force sign in after creation
-      const { data, error } = await supabase.auth.signInWithPassword({
+      // Use standard Supabase signup with email confirmation
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
-        password,
+        password
       });
       
-      if (error) {
-        throw error;
+      if (signUpError) {
+        throw signUpError;
       }
       
-      console.log('Signed in as new user:', data?.user);
-      router.push('/');
+      console.log('Account created:', data);
+      
+      if (!data.user) {
+        throw new Error('Failed to create account');
+      }
+      
+      throw new Error('Please check your email to confirm your account before signing in.');
     } catch (err) {
       console.error('Error signing up:', err);
       setError(err instanceof Error ? err : new Error(String(err)));

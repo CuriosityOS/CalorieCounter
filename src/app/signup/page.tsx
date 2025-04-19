@@ -55,8 +55,13 @@ export default function SignupPage() {
       await signUp(email, password);
       // Success! User will be automatically redirected to home page
     } catch (err) {
-      // Show the actual error message from the API
+      // Show standard error message
       setAuthError(err instanceof Error ? err.message : 'An error occurred during signup');
+      
+      // If signup was successful but needs confirmation
+      if (err instanceof Error && err.message.includes('confirmation')) {
+        setSuccessMessage('Please check your email for a confirmation link to complete signup.');
+      }
     }
   };
 
