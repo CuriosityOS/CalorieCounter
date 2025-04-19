@@ -43,7 +43,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onUpload, isAnalyzing }) 
     reader.readAsDataURL(file);
   };
 
-  const convertToBase64 = (file: File) => {
+  const convertToBase64 = useCallback((file: File) => {
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64String = reader.result?.toString().split(',')[1];
@@ -59,7 +59,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onUpload, isAnalyzing }) 
       resetState();
     };
     reader.readAsDataURL(file);
-  };
+  }, [onUpload]);
 
   const resetState = () => {
     // setSelectedFile(null); // Removed unused state update

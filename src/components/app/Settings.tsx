@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const Settings: React.FC = () => {
-  const { darkMode, dailyGoals } = useAppStore((state) => state.userPreferences);
+  const { darkMode } = useAppStore((state) => state.userPreferences);
+  const nutritionGoals = useAppStore((state) => state.userPreferences.nutritionGoals);
   const { toggleDarkMode } = useAppStore();
 
   return (
@@ -34,19 +35,19 @@ const Settings: React.FC = () => {
           <div className="grid grid-cols-2 gap-3 mb-3">
             <div>
                 <Label className="text-xs text-muted-foreground">Calories</Label>
-                <p>{dailyGoals.calories ?? 'Not set'}</p>
+                <p>{nutritionGoals.calories ?? 'Not set'}</p>
             </div>
              <div>
                 <Label className="text-xs text-muted-foreground">Protein (g)</Label>
-                <p>{dailyGoals.protein ?? 'Not set'}</p>
+                <p>{nutritionGoals.protein ?? 'Not set'}</p>
             </div>
              <div>
                 <Label className="text-xs text-muted-foreground">Carbs (g)</Label>
-                <p>{dailyGoals.carbs ?? 'Not set'}</p>
+                <p>{nutritionGoals.carbs ?? 'Not set'}</p>
             </div>
              <div>
                 <Label className="text-xs text-muted-foreground">Fat (g)</Label>
-                <p>{dailyGoals.fat ?? 'Not set'}</p>
+                <p>{nutritionGoals.fat ?? 'Not set'}</p>
             </div>
           </div>
           <button className="mt-2 px-3 py-1 border rounded text-sm">Set Goals</button>

@@ -1,83 +1,90 @@
-# CalorieCounter V1.0
+# CalorieCounter
 
-A web application built with Next.js, React, and TypeScript that uses AI (via OpenRouter and Gemini Flash) to analyze images of food and estimate nutritional information (calories, protein, carbs, fat).
+An AI-powered calorie tracking app that analyzes food images and provides nutritional information.
 
 ## Features
 
-*   **Image Upload**: Upload images of food items.
-*   **AI Analysis**: Sends images to an AI model (Gemini Flash via OpenRouter) for analysis.
-*   **Nutrition Estimation**: Displays estimated calories, protein, carbs, and fat based on AI response.
-*   **Meal History**: Stores analyzed meals in client-side state (using Zustand).
-*   **Dark/Light Mode**: Toggle theme preference.
-*   **Styling**: Uses Tailwind CSS and shadcn/ui components.
-
-## Getting Started
-
-### Prerequisites
-
-*   Node.js (v18 or later recommended)
-*   npm or yarn or pnpm
-*   An OpenRouter API Key
-
-### Installation & Setup
-
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/CuriosityOS/CalorieCounter.git
-    cd CalorieCounter
-    ```
-
-2.  **Install dependencies:**
-    ```bash
-    npm install
-    # or
-    # yarn install
-    # or
-    # pnpm install
-    ```
-
-3.  **Set up environment variables:**
-    *   Create a file named `.env.local` in the project root.
-    *   Add your OpenRouter API key to this file:
-        ```env
-        NEXT_PUBLIC_OPENROUTER_API_KEY="YOUR_OPENROUTER_API_KEY_HERE"
-
-        # Optional: Set these if deploying or running on a different port
-        # NEXT_PUBLIC_SITE_URL="http://localhost:5000" # Your app's URL
-        # NEXT_PUBLIC_APP_TITLE="CalorieCounter"
-        ```
-    *   **Important:** The `.env.local` file is included in `.gitignore` and should **not** be committed to version control.
-
-4.  **Run the development server:**
-    ```bash
-    npm run dev
-    ```
-
-    **Run the production server:**
-    ```bash
-    npm run build
-    npm start
-    ```
-
-5.  Open [http://localhost:5000](http://localhost:5000) (or your configured port) in your browser.
+- Upload food images and get AI analysis of nutrition content
+- Track daily calorie and macro intake
+- Save meal history
+- User profiles with weight tracking
+- Customizable nutrition goals
 
 ## Tech Stack
 
-*   **Framework**: Next.js (App Router)
-*   **Language**: TypeScript
-*   **UI Library**: React
-*   **Styling**: Tailwind CSS, shadcn/ui
-*   **State Management**:
-    *   Zustand (Client-side state)
-    *   TanStack Query (Server state, caching)
-*   **AI Integration**: OpenRouter (using `google/gemini-flash-1.5`)
-*   **Form Handling**: React Hook Form (planned)
-*   **Validation**: Zod (planned)
+- Next.js 15 with App Router
+- TypeScript
+- Tailwind CSS
+- Supabase for authentication and database
+- AI image analysis via OpenRouter API (using Gemini Flash)
 
-## Contributing
+## Setup and Installation
 
-Contributions are welcome! Please feel free to open an issue or submit a pull request.
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/CalorieCounter.git
+cd CalorieCounter
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Create a `.env.local` file based on `.env.example` and add your API keys:
+```
+# API Keys
+NEXT_PUBLIC_OPENROUTER_API_KEY=your-openrouter-key-here
+NEXT_PUBLIC_SITE_URL=https://caloriecounter.lol
+NEXT_PUBLIC_APP_TITLE=CalorieCounter
+
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+```
+
+4. Run the development server:
+```bash
+npm run dev
+```
+
+## Authentication Setup
+
+This application uses Supabase for authentication. To set up authentication:
+
+1. Create a Supabase project at [https://supabase.com](https://supabase.com)
+2. Under Authentication settings, configure:
+   - Email auth (enabled by default)
+   - **Important:** Disable email confirmation completely
+   - No need to set up any redirect URLs
+3. Copy your Supabase URL and anonymous key to your `.env.local` file
+4. Run the SQL schema in `supabase_setup.sql` in the Supabase SQL editor
+
+## Data Storage
+
+All user data is stored in Supabase:
+- No local storage is used for data persistence
+- This ensures data consistency across multiple devices
+- Daily nutrition totals are calculated from the day's meals in the database
+- User preferences, meals, and weight entries are all stored in Supabase
+
+## Troubleshooting Authentication
+
+If you're experiencing authentication issues:
+
+1. Verify environment variables are correctly set
+   - NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be valid
+2. Check browser console for auth-related errors
+3. Make sure email confirmation is disabled in Supabase
+4. Clear your browser cookies and local storage if experiencing persistent issues
+
+## Development
+
+- `npm run dev` - Start the development server
+- `npm run build` - Build the application for production
+- `npm run start` - Start the production server
+- `npm run lint` - Run ESLint to check code quality
 
 ## License
 
-This project is open source.
+MIT

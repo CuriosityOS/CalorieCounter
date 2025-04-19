@@ -7,6 +7,9 @@ function makeQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
+        staleTime: 30000, // 30 seconds
+        retry: 1,
+        refetchOnWindowFocus: false,
       },
     },
   });
@@ -23,11 +26,14 @@ function getQueryClient() {
   }
 }
 
+// Export the query client for direct access
+export const queryClient = typeof window !== 'undefined' ? getQueryClient() : undefined;
+
 export default function QueryProvider({ children }: { children: React.ReactNode }) {
-  const queryClient = getQueryClient();
+  const clientToUse = getQueryClient();
 
   return (
-    <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={clientToUse}>
       {children}
     </QueryClientProvider>
   );
