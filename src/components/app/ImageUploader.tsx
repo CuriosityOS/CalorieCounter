@@ -106,6 +106,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onUpload, isAnalyzing }) 
           id="image-upload-input"
           type="file"
           accept="image/*"
+          capture="environment"
           onChange={handleFileChange}
           ref={fileInputRef}
           className="hidden"
@@ -122,9 +123,13 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onUpload, isAnalyzing }) 
               <span className="font-semibold">Click to upload</span> or drag and drop
             </p>
             <p className="text-xs text-muted-foreground">PNG, JPG, GIF, WEBP etc.</p>
-            <Button variant="ghost" size="sm" className="mt-2" disabled={isAnalyzing}>
-              <Camera className="w-4 h-4 mr-1" /> Use Camera
-            </Button>
+            <div className="flex space-x-2 mt-2">
+              <Label htmlFor="image-upload-input" className="cursor-pointer">
+                <Button variant="ghost" size="sm" disabled={isAnalyzing} type="button">
+                  <Camera className="w-4 h-4 mr-1" /> Use Camera
+                </Button>
+              </Label>
+            </div>
           </Label>
         ) : (
           <div className="relative group">
