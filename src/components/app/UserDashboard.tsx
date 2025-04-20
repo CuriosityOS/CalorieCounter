@@ -8,6 +8,7 @@ import MealHistory from './MealHistory';
 import NutritionDashboard from './NutritionDashboard';
 import FoodDescriptionAnalyzer from './FoodDescriptionAnalyzer';
 import ManualFoodEntry from './ManualFoodEntry';
+import PulsingEyeAnimation from './PulsingEyeAnimation';
 import { useAnalyzeImage } from '@/hooks/useAnalyzeImage';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { UtensilsCrossed, Camera } from 'lucide-react';

@@ -1,4 +1,5 @@
 import React from 'react';
+import PulsingEyeAnimation from './PulsingEyeAnimation';
 
 // Updated interface to match api.ts
 interface NutritionData {
@@ -18,7 +19,11 @@ interface NutritionDisplayProps {
 
 const NutritionDisplay: React.FC<NutritionDisplayProps> = ({ data, isLoading, error }) => {
   if (isLoading) {
-    return <div className="text-center p-4">Analyzing image...</div>;
+    return (
+      <div className="flex flex-col items-center justify-center p-4">
+        <PulsingEyeAnimation size={100} />
+      </div>
+    );
   }
 
   if (error) {

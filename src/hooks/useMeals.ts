@@ -42,11 +42,19 @@ export function useMeals() {
         console.log(`Retrieved ${data.length} meals from Supabase`);
         const allMeals = data as Meal[];
         
-        // Filter for today's meals - ensure proper date conversion
+        // Filter for today's meals using start and end of day timestamps
+        const now = new Date();
+        const startOfDay = new Date(now);
+        startOfDay.setHours(0, 0, 0, 0);
+        
+        const endOfDay = new Date(now);
+        endOfDay.setHours(23, 59, 59, 999);
+        
         const today = allMeals.filter(meal => {
           const mealDate = new Date(meal.created_at);
-          console.log(`Checking meal: ${meal.meal_name}, date: ${mealDate.toISOString()}, isToday: ${isToday(mealDate)}`);
-          return isToday(mealDate);
+          const isInToday = mealDate >= startOfDay && mealDate <= endOfDay;
+          console.log(`Checking meal: ${meal.meal_name}, date: ${mealDate.toISOString()}, isInToday: ${isInToday}`);
+          return isInToday;
         });
         console.log(`Found ${today.length} meals for today`);
         
