@@ -159,10 +159,10 @@ export const useAppStore = create((set, get) => {
       
       // Calculate daily totals
       const dailyTotals = todayMeals.reduce((acc, meal) => ({
-        calories: acc.calories + meal.calories,
-        protein: acc.protein + meal.protein,
-        carbs: acc.carbs + meal.carbs,
-        fat: acc.fat + meal.fat,
+        calories: acc.calories + (meal.calories || 0),
+        protein: acc.protein + (meal.protein || 0),
+        carbs: acc.carbs + (meal.carbs || 0),
+        fat: acc.fat + (meal.fat || 0),
       }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
       
       // Format data
@@ -442,9 +442,19 @@ export const useAppStore = create((set, get) => {
       console.log('Dark mode toggle is now handled by the theme provider');
     },
     
-    // No-op function for compatibility
+    // Simple function to check and reset at midnight
     checkAndResetDaily: () => {
-      // No longer needed as daily totals are calculated from today's meals
+      if (typeof window === 'undefined') return;
+      
+      const today = new Date().toISOString().split('T')[0];
+      const lastReset = window.localStorage.getItem('last-nutrition-reset') || '';
+      
+      if (today !== lastReset) {
+        console.log('New day detected, refreshing nutrition data');
+        window.localStorage.setItem('last-nutrition-reset', today);
+        // Don't use window.location.reload() since it's handled in the component
+        loadAllData();
+      }
     },
   };
 });

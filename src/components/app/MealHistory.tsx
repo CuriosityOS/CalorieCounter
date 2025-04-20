@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { formatTime } from '@/lib/utils';
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -21,6 +21,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAnalyzeImage } from '@/hooks/useAnalyzeImage';
 import { useMeals } from '@/hooks/useMeals';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/lib/supabase-client';
 
 interface MealEditFormProps {
   meal: {
@@ -177,24 +178,72 @@ const MealEditForm: React.FC<MealEditFormProps> = ({ meal, onCancel, onSave, onA
   );
 };
 
-export default function MealHistory({ limit, showTitle = true, className = "" }: { 
+interface MealHistoryProps { 
   limit?: number; 
   showTitle?: boolean; 
   className?: string;
-}) {
-  // Get meals directly from the hook instead of the store
-  const { meals, updateMeal: updateMealInSupabase, deleteMeal: deleteMealFromSupabase } = useMeals();
+  selectedDate?: Date;
+}
+
+export default function MealHistory({ limit, showTitle = true, className = "", selectedDate }: MealHistoryProps) {
+  // Get hook functions
+  const { todayMeals, updateMeal: updateMealInSupabase, deleteMeal: deleteMealFromSupabase } = useMeals();
   const { user: authUser } = useAuth();
   const updateMeal = useAppStore((state) => state.updateMeal);
   const deleteMeal = useAppStore((state) => state.deleteMeal);
   const refreshAll = useAppStore((state) => state.refreshAll);
+  const [dateMeals, setDateMeals] = useState<any[]>([]);
   const [editingMealId, setEditingMealId] = useState<string | null>(null);
   const [showImageId, setShowImageId] = useState<string | null>(null);
   const analyzeMutation = useAnalyzeImage();
   
+  // Fetch meals for the selected date using the same approach as history page
+  useEffect(() => {
+    async function fetchMealsForDate() {
+      if (!authUser) return;
+      
+      // Default to today if no date is provided
+      const dateToFetch = selectedDate || new Date();
+      
+      try {
+        // Get start and end of selected date
+        const startDate = new Date(dateToFetch);
+        startDate.setHours(0, 0, 0, 0);
+        
+        const endDate = new Date(dateToFetch);
+        endDate.setHours(23, 59, 59, 999);
+        
+        // Query meals for the selected date range - exactly like history page
+        const { data, error } = await supabase
+          .from('meals')
+          .select('*')
+          .eq('user_id', authUser.id)
+          .gte('created_at', startDate.toISOString())
+          .lte('created_at', endDate.toISOString())
+          .order('created_at', { ascending: false });
+          
+        if (error) {
+          console.error('Error fetching meals for date:', error);
+          throw error;
+        }
+        
+        if (data && data.length > 0) {
+          setDateMeals(data);
+        } else {
+          setDateMeals([]);
+        }
+      } catch (err) {
+        console.error('Failed to fetch meals for date:', err);
+        setDateMeals([]);
+      }
+    }
+    
+    fetchMealsForDate();
+  }, [selectedDate, authUser]);
+  
   // Format meals from Supabase format to app format
   const formattedMeals = React.useMemo(() => {
-    return meals.map(meal => ({
+    return dateMeals.map(meal => ({
       id: meal.id,
       mealName: meal.meal_name || 'Unknown Meal',
       ingredients: meal.ingredients || [],
@@ -205,7 +254,7 @@ export default function MealHistory({ limit, showTitle = true, className = "" }:
       timestamp: new Date(meal.created_at).getTime(),
       imageUrl: meal.image_url || undefined,
     }));
-  }, [meals]);
+  }, [dateMeals]);
   
   const displayMeals = limit ? formattedMeals.slice(0, limit) : formattedMeals;
 
@@ -283,7 +332,7 @@ export default function MealHistory({ limit, showTitle = true, className = "" }:
     const mealId = editingMealId;
     if (!mealId) return;
     
-    const meal = meals.find(m => m.id === mealId);
+    const meal = dateMeals.find(m => m.id === mealId);
     if (!meal) return;
     
     try {
@@ -353,7 +402,7 @@ export default function MealHistory({ limit, showTitle = true, className = "" }:
             <p className="text-center text-muted-foreground py-4">No meals logged yet. Upload an image to start!</p>
           ) : (
             <div className="space-y-4">
-              {displayMeals.slice().reverse().map((meal, index) => {
+              {displayMeals.map((meal, index) => {
                 // Format mealName (handle array case)
                 const displayMealName = meal.mealName
                   ? Array.isArray(meal.mealName) ? meal.mealName.join(', ') : meal.mealName

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import ImageUploader from './ImageUploader';
 import NutritionDisplay from './NutritionDisplay';
@@ -12,10 +12,12 @@ import { useAnalyzeImage } from '@/hooks/useAnalyzeImage';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { UtensilsCrossed, Camera } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { formatDate } from '@/lib/utils';
 
 export default function UserDashboard() {
   const analyzeImageMutation = useAnalyzeImage();
   const router = useRouter();
+  const [selectedDate, setSelectedDate] = useState(new Date());
   
   // Force prefetch of key pages
   useEffect(() => {
@@ -60,7 +62,10 @@ export default function UserDashboard() {
     >
       {/* Nutrition overview */}
       <motion.div variants={itemAnimation}>
-        <NutritionDashboard />
+        <NutritionDashboard
+          onDateChange={setSelectedDate}
+          selectedDate={selectedDate}
+        />
       </motion.div>
       
       {/* Debug components removed */}
@@ -103,11 +108,16 @@ export default function UserDashboard() {
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center">
                 <UtensilsCrossed className="w-5 h-5 mr-2 text-primary" />
-                Today&apos;s Meals
+                Meals for {formatDate(selectedDate)}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <MealHistory limit={5} showTitle={false} className="border-0 shadow-none" />
+              <MealHistory 
+                limit={5} 
+                showTitle={false} 
+                className="border-0 shadow-none" 
+                selectedDate={selectedDate}
+              />
             </CardContent>
           </Card>
         </motion.div>
