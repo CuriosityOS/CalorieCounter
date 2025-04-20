@@ -17,7 +17,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onUpload, isAnalyzing }) 
   // const [selectedFile, setSelectedFile] = useState<File | null>(null); // Removed unused state
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setError(null);
@@ -64,8 +65,11 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onUpload, isAnalyzing }) 
   const resetState = () => {
     // setSelectedFile(null); // Removed unused state update
     setPreviewUrl(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+    if (galleryInputRef.current) {
+      galleryInputRef.current.value = '';
+    }
+    if (cameraInputRef.current) {
+      cameraInputRef.current.value = '';
     }
   };
 
@@ -103,34 +107,56 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onUpload, isAnalyzing }) 
         onDrop={handleDrop}
       >
         <Input
-          id="image-upload-input"
+          id="gallery-upload-input"
+          type="file"
+          accept="image/*"
+          onChange={handleFileChange}
+          ref={galleryInputRef}
+          className="hidden"
+          disabled={isAnalyzing}
+        />
+        
+        <Input
+          id="camera-upload-input"
           type="file"
           accept="image/*"
           capture="environment"
           onChange={handleFileChange}
-          ref={fileInputRef}
+          ref={cameraInputRef}
           className="hidden"
           disabled={isAnalyzing}
         />
 
         {!previewUrl ? (
-          <Label
-            htmlFor="image-upload-input"
-            className={`flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-lg cursor-pointer ${isAnalyzing ? 'cursor-not-allowed bg-muted/50' : 'hover:border-primary/50 hover:bg-muted/20'} transition-colors`}
+          <div
+            className={`flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-lg ${isAnalyzing ? 'cursor-not-allowed bg-muted/50' : 'hover:border-primary/50 hover:bg-muted/20'} transition-colors`}
           >
             <UploadCloud className="w-10 h-10 text-muted-foreground mb-2" />
             <p className="mb-1 text-sm text-muted-foreground">
-              <span className="font-semibold">Click to upload</span> or drag and drop
+              Upload a photo or take a new one
             </p>
             <p className="text-xs text-muted-foreground">PNG, JPG, GIF, WEBP etc.</p>
-            <div className="flex space-x-2 mt-2">
-              <Label htmlFor="image-upload-input" className="cursor-pointer">
-                <Button variant="ghost" size="sm" disabled={isAnalyzing} type="button">
-                  <Camera className="w-4 h-4 mr-1" /> Use Camera
-                </Button>
-              </Label>
+            <div className="flex space-x-4 mt-4">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                disabled={isAnalyzing} 
+                type="button"
+                onClick={() => galleryInputRef.current?.click()}
+              >
+                <UploadCloud className="w-4 h-4 mr-2" /> Upload Photo
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                disabled={isAnalyzing} 
+                type="button"
+                onClick={() => cameraInputRef.current?.click()}
+              >
+                <Camera className="w-4 h-4 mr-2" /> Take Photo
+              </Button>
             </div>
-          </Label>
+          </div>
         ) : (
           <div className="relative group">
             <Image
