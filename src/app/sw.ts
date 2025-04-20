@@ -1,0 +1,1 @@
+// This file will be manually copied to public/sw.js

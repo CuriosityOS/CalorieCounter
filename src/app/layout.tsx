@@ -7,6 +7,7 @@ import NavBar from "@/components/app/NavBar";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "next-themes";
 import DirectNavigationLinks from "./_components/DirectNavigationLinks";
+import Script from "next/script";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -21,6 +22,19 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "CalorieCounter",
   description: "AI-powered calorie tracking",
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'CalorieCounter',
+  },
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: '#000000',
 };
 
 export default function RootLayout({
@@ -57,6 +71,22 @@ export default function RootLayout({
             </AuthGuard>
           </QueryProvider>
         </ThemeProvider>
+        <Script
+          id="register-sw"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator && window.location.hostname !== 'localhost') {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js').then(
+                    function(registration) { console.log('Service Worker registration successful'); },
+                    function(err) { console.log('Service Worker registration failed: ', err); }
+                  );
+                });
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );
