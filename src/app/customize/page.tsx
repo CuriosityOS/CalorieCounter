@@ -577,7 +577,7 @@ export default function CustomizePage() {
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart
                         data={chartData}
-                        margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
+                        margin={{ top: 5, right: 50, left: 20, bottom: 5 }}
                       >
                         <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
                         <XAxis
@@ -588,7 +588,41 @@ export default function CustomizePage() {
                           }}
                         />
                         <YAxis
-                          domain={['dataMin - 5', 'dataMax + 5']}
+                          domain={[
+                            (dataMin) => {
+                              // Handle empty data case
+                              if (!chartData.length) return 0;
+                              
+                              // If only one entry, create a reasonable range around it
+                              if (chartData.length === 1) {
+                                const weight = chartData[0]?.weight || 70;
+                                // Set min to 90% of value, rounded down to nearest 5
+                                return Math.floor((weight * 0.9) / 5) * 5;
+                              }
+                              
+                              // For multiple entries, find min and round down to nearest 5
+                              const minWeight = Math.min(...chartData.map(entry => entry.weight));
+                              // Subtract a buffer and round down to nearest 5
+                              return Math.floor((minWeight - 2) / 5) * 5;
+                            },
+                            (dataMax) => {
+                              // Handle empty data case
+                              if (!chartData.length) return 100;
+                              
+                              // If only one entry, create a reasonable range around it
+                              if (chartData.length === 1) {
+                                const weight = chartData[0]?.weight || 70;
+                                // Set max to 110% of value, rounded up to nearest 5
+                                return Math.ceil((weight * 1.1) / 5) * 5;
+                              }
+                              
+                              // For multiple entries, find max and round up to nearest 5
+                              const maxWeight = Math.max(...chartData.map(entry => entry.weight));
+                              // Add a buffer and round up to nearest 5
+                              return Math.ceil((maxWeight + 2) / 5) * 5;
+                            }
+                          ]}
+                          tickCount={5}
                           tickFormatter={(value) => `${value}kg`}
                         />
                         <Tooltip
