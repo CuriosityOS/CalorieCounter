@@ -12,7 +12,17 @@ export default function Home() {
   
   // Check if we need to reset daily nutrition counters
   useEffect(() => {
-    checkAndResetDaily();
+    // Check for day change and reset if needed
+    if (typeof window !== 'undefined') {
+      const today = new Date().toISOString().split('T')[0];
+      const lastDay = localStorage.getItem('last-active-day');
+      
+      if (!lastDay || lastDay !== today) {
+        console.log('New day detected in Home page, refreshing');
+        localStorage.setItem('last-active-day', today);
+        window.location.reload();
+      }
+    }
     
     // Force prefetch other routes to ensure navigation works correctly
     const prefetchRoutes = async () => {
@@ -25,7 +35,7 @@ export default function Home() {
     };
     
     prefetchRoutes().catch(console.error);
-  }, [checkAndResetDaily]);
+  }, []);
 
   return (
     <div className="container px-4 py-8 max-w-7xl mx-auto">

@@ -173,10 +173,10 @@ export function useMeals() {
   // Calculate daily totals
   const dailyTotals = todayMeals.reduce((acc, meal) => {
     return {
-      calories: acc.calories + meal.calories,
-      protein: acc.protein + meal.protein,
-      carbs: acc.carbs + meal.carbs,
-      fat: acc.fat + meal.fat,
+      calories: acc.calories + (meal.calories || 0),
+      protein: acc.protein + (meal.protein || 0),
+      carbs: acc.carbs + (meal.carbs || 0),
+      fat: acc.fat + (meal.fat || 0),
     };
   }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
 
