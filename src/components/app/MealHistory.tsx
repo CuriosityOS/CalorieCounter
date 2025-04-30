@@ -21,7 +21,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAnalyzeImage } from '@/hooks/useAnalyzeImage';
 import { useMeals } from '@/hooks/useMeals';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/lib/supabase-client';
+// import { supabase } from '@/lib/supabase-client'; // Not needed after refactoring
 
 interface MealEditFormProps {
   meal: {
@@ -197,49 +197,24 @@ export default function MealHistory({ limit, showTitle = true, className = "", s
   const [showImageId, setShowImageId] = useState<string | null>(null);
   const analyzeMutation = useAnalyzeImage();
   
-  // Fetch meals for the selected date using the same approach as history page
+  // Use the meals from the useMeals hook
   useEffect(() => {
-    async function fetchMealsForDate() {
-      if (!authUser) return;
-      
-      // Default to today if no date is provided
-      const dateToFetch = selectedDate || new Date();
-      
-      try {
-        // Get start and end of selected date
-        const startDate = new Date(dateToFetch);
-        startDate.setHours(0, 0, 0, 0);
-        
-        const endDate = new Date(dateToFetch);
-        endDate.setHours(23, 59, 59, 999);
-        
-        // Query meals for the selected date range - exactly like history page
-        const { data, error } = await supabase
-          .from('meals')
-          .select('*')
-          .eq('user_id', authUser.id)
-          .gte('created_at', startDate.toISOString())
-          .lte('created_at', endDate.toISOString())
-          .order('created_at', { ascending: false });
-          
-        if (error) {
-          console.error('Error fetching meals for date:', error);
-          throw error;
-        }
-        
-        if (data && data.length > 0) {
-          setDateMeals(data);
-        } else {
-          setDateMeals([]);
-        }
-      } catch (err) {
-        console.error('Failed to fetch meals for date:', err);
-        setDateMeals([]);
-      }
-    }
+    if (!authUser) return;
     
-    fetchMealsForDate();
-  }, [selectedDate, authUser]);
+    // Use the meals already fetched by the useMeals hook
+    setDateMeals(todayMeals.map(meal => ({
+      id: meal.id,
+      meal_name: meal.meal_name || 'Unknown Meal',
+      ingredients: meal.ingredients || [],
+      calories: meal.calories || 0,
+      protein: meal.protein || 0,
+      carbs: meal.carbs || 0,
+      fat: meal.fat || 0,
+      created_at: meal.created_at,
+      image_url: meal.image_url || undefined,
+    })));
+    
+  }, [todayMeals, authUser, selectedDate]);
   
   // Format meals from Supabase format to app format
   const formattedMeals = React.useMemo(() => {

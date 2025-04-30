@@ -3,12 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { useUser } from '@/hooks/useUser';
-import { formatNumber } from '@/lib/utils';
+// import { formatNumber } from '@/lib/utils'; // Not needed after refactoring
 import { Card, CardContent, CardHeader } from '../ui/card';
 import NutritionCircles from './NutritionCircles';
 import DateNavigation from './DateNavigation';
-import { supabase } from '@/lib/supabase-client';
 import { useAuth } from '@/hooks/useAuth';
+import { useMeals } from '@/hooks/useMeals';
 
 interface NutritionDashboardProps {
   selectedDate?: Date;
@@ -20,7 +20,7 @@ export default function NutritionDashboard({
   onDateChange: propOnDateChange
 }: NutritionDashboardProps) {
   const { user } = useUser();
-  const { user: authUser } = useAuth();
+  // const { user: authUser } = useAuth(); // Not needed after refactoring
   const nutritionGoals = useAppStore((state) => state.userPreferences.nutritionGoals);
   
   // State for date navigation - use props if provided, otherwise use local state
@@ -35,10 +35,9 @@ export default function NutritionDashboard({
       setLocalSelectedDate(date);
     }
   };
-  const [dateNutrition, setDateNutrition] = useState({
-    calories: 0, protein: 0, carbs: 0, fat: 0
-  });
-  const [isLoadingDate, setIsLoadingDate] = useState(false);
+
+  // Using useMeals hook to get real-time nutrition data
+  const { dailyTotals, loading: mealsLoading } = useMeals();
   
   // Use user's custom targets if available, otherwise use app's default goals
   const targets = {
@@ -61,59 +60,6 @@ export default function NutritionDashboard({
       }
     }
   }, []);
-  
-  // Fetch meals for the selected date - Using the SAME implementation as history page
-  useEffect(() => {
-    async function fetchMealsForDate() {
-      if (!authUser) return;
-      
-      setIsLoadingDate(true);
-      
-      try {
-        // Get start and end of selected date
-        const startDate = new Date(selectedDate);
-        startDate.setHours(0, 0, 0, 0);
-        
-        const endDate = new Date(selectedDate);
-        endDate.setHours(23, 59, 59, 999);
-        
-        // Query meals for the selected date range - exactly like history page
-        const { data, error } = await supabase
-          .from('meals')
-          .select('*')
-          .eq('user_id', authUser.id)
-          .gte('created_at', startDate.toISOString())
-          .lte('created_at', endDate.toISOString())
-          .order('created_at', { ascending: false });
-          
-        if (error) {
-          console.error('Error fetching meals for date:', error);
-          throw error;
-        }
-        
-        if (data && data.length > 0) {
-          // Calculate nutrition totals for this date - exactly like history page
-          const totals = data.reduce((acc, meal) => ({
-            calories: acc.calories + (meal.calories || 0),
-            protein: acc.protein + (meal.protein || 0),
-            carbs: acc.carbs + (meal.carbs || 0),
-            fat: acc.fat + (meal.fat || 0),
-          }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
-          
-          setDateNutrition(totals);
-        } else {
-          // No meals found for this date
-          setDateNutrition({ calories: 0, protein: 0, carbs: 0, fat: 0 });
-        }
-      } catch (err) {
-        console.error('Failed to fetch meals for date:', err);
-      } finally {
-        setIsLoadingDate(false);
-      }
-    }
-    
-    fetchMealsForDate();
-  }, [selectedDate, authUser]);
 
   return (
     <Card>
@@ -124,7 +70,7 @@ export default function NutritionDashboard({
         />
       </CardHeader>
       <CardContent className="pt-6 pb-4">
-        {isLoadingDate ? (
+        {mealsLoading ? (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 w-full">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="flex flex-col items-center animate-pulse">
@@ -135,7 +81,7 @@ export default function NutritionDashboard({
           </div>
         ) : (
           <NutritionCircles
-            dailyNutrition={dateNutrition}
+            dailyNutrition={dailyTotals}
             targets={targets}
           />
         )}

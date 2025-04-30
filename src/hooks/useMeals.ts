@@ -4,7 +4,7 @@ import { useCallback } from 'react';
 import { supabase } from '@/lib/supabase-client';
 import type { Meal } from '@/lib/supabase-client';
 import { useAuth } from './useAuth';
-import { getStartOfDayGmt8, isToday } from '@/lib/utils';
+import { getStartOfDayGmt8 } from '@/lib/utils';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export function useMeals() {
@@ -75,13 +75,15 @@ export function useMeals() {
     }
   }, [user]);
   
-  // Create React Query for meals
+  // Create React Query for meals with lower staleTime and refetchOnWindowFocus
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['meals', user?.id],
     queryFn: fetchMeals,
     enabled: !!user,
-    staleTime: 30000, // 30 seconds
+    staleTime: 1000, // 1 second - more responsive to changes
     refetchOnMount: true, // Always refetch on mount
+    refetchOnWindowFocus: true, // Refetch when window gets focus
+    refetchInterval: 5000, // Poll every 5 seconds for changes
     retry: 3, // Retry failed queries 3 times
   });
   
