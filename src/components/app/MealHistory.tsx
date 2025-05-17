@@ -192,17 +192,15 @@ export default function MealHistory({ limit, showTitle = true, className = "", s
   const updateMeal = useAppStore((state) => state.updateMeal);
   const deleteMeal = useAppStore((state) => state.deleteMeal);
   const refreshAll = useAppStore((state) => state.refreshAll);
-  const [dateMeals, setDateMeals] = useState<any[]>([]);
   const [editingMealId, setEditingMealId] = useState<string | null>(null);
   const [showImageId, setShowImageId] = useState<string | null>(null);
   const analyzeMutation = useAnalyzeImage();
-  
-  // Use the meals from the useMeals hook
-  useEffect(() => {
-    if (!authUser) return;
-    
-    // Use the meals already fetched by the useMeals hook
-    setDateMeals(todayMeals.map(meal => ({
+
+  const mappedDateMeals = React.useMemo(() => {
+    if (!authUser) {
+      return [];
+    }
+    return todayMeals.map(meal => ({
       id: meal.id,
       meal_name: meal.meal_name || 'Unknown Meal',
       ingredients: meal.ingredients || [],
@@ -212,13 +210,12 @@ export default function MealHistory({ limit, showTitle = true, className = "", s
       fat: meal.fat || 0,
       created_at: meal.created_at,
       image_url: meal.image_url || undefined,
-    })));
-    
-  }, [todayMeals, authUser, selectedDate]);
+    }));
+  }, [todayMeals, authUser]);
   
   // Format meals from Supabase format to app format
   const formattedMeals = React.useMemo(() => {
-    return dateMeals.map(meal => ({
+    return mappedDateMeals.map(meal => ({
       id: meal.id,
       mealName: meal.meal_name || 'Unknown Meal',
       ingredients: meal.ingredients || [],
@@ -229,7 +226,7 @@ export default function MealHistory({ limit, showTitle = true, className = "", s
       timestamp: new Date(meal.created_at).getTime(),
       imageUrl: meal.image_url || undefined,
     }));
-  }, [dateMeals]);
+  }, [mappedDateMeals]);
   
   const displayMeals = limit ? formattedMeals.slice(0, limit) : formattedMeals;
 
@@ -307,7 +304,7 @@ export default function MealHistory({ limit, showTitle = true, className = "", s
     const mealId = editingMealId;
     if (!mealId) return;
     
-    const meal = dateMeals.find(m => m.id === mealId);
+    const meal = mappedDateMeals.find(m => m.id === mealId);
     if (!meal) return;
     
     try {
@@ -323,7 +320,7 @@ export default function MealHistory({ limit, showTitle = true, className = "", s
           
           // Create the update object
           const updateData = {
-            meal_name: result.mealName || meal.meal_name,
+            meal_name: (Array.isArray(result.mealName) ? result.mealName[0] : result.mealName) || meal.meal_name,
             ingredients: result.ingredients || meal.ingredients,
             calories: result.calories || meal.calories,
             protein: result.protein || meal.protein,
@@ -333,7 +330,7 @@ export default function MealHistory({ limit, showTitle = true, className = "", s
           
           // Update the meal with the new info
           try {
-            await updateMealInSupabase(mealId, updateData);
+            await updateMealInSupabase(mealId, updateData as any); // Using 'as any' temporarily if Supabase type is complex
             console.log('Meal updated with AI results');
             refreshAll();
           } catch (updateError) {
@@ -377,7 +374,17 @@ export default function MealHistory({ limit, showTitle = true, className = "", s
             <p className="text-center text-muted-foreground py-4">No meals logged yet. Upload an image to start!</p>
           ) : (
             <div className="space-y-4">
-              {displayMeals.map((meal, index) => {
+              {displayMeals.map((meal: {
+                id: string;
+                mealName: string | string[];
+                ingredients: string[];
+                calories: number;
+                protein: number;
+                carbs: number;
+                fat: number;
+                timestamp: number;
+                imageUrl?: string;
+              }, index: number) => {
                 // Format mealName (handle array case)
                 const displayMealName = meal.mealName
                   ? Array.isArray(meal.mealName) ? meal.mealName.join(', ') : meal.mealName

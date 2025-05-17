@@ -1,6 +1,6 @@
 'use client';
 
-import { create } from 'zustand';
+import { create, StateCreator } from 'zustand'; // Import StateCreator
 // DO NOT directly import hooks at the top level to avoid circular dependencies
 // Hooks will be dynamically imported when needed
 
@@ -49,12 +49,65 @@ export interface Meal {
   imageUrl?: string;
 }
 
+// Additional type definitions for the store state
+interface NutritionData {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
+interface UserProfileData {
+  weight?: number;
+  height?: number;
+  age?: number;
+  gender?: "male" | "female" | undefined; // Adjusted gender type
+  activityLevel?: string;
+  goalOffset?: number;
+}
+
+interface WeightHistoryEntry {
+  date: string;
+  weight: number;
+}
+
+interface UserPreferencesData {
+  darkMode: boolean;
+  nutritionGoals: NutritionData;
+  profile: UserProfileData;
+  weightHistory: WeightHistoryEntry[];
+  lastDailyReset: string;
+}
+
+// Type for new meal data passed to addMeal
+type NewMealData = Omit<Meal, 'id' | 'timestamp'>;
+
+// Type for updates to a meal
+type MealUpdates = Partial<Omit<Meal, 'id' | 'timestamp'>>;
+
+export interface AppState {
+  meals: Meal[];
+  dailyNutrition: NutritionData;
+  userPreferences: UserPreferencesData;
+
+  refreshAll: () => Promise<void>;
+  addMeal: (mealData: NewMealData) => Promise<Meal | void>;
+  updateMeal: (id: string, updates: MealUpdates) => Promise<void>;
+  deleteMeal: (id: string) => Promise<void>;
+  updateNutritionGoals: (goals: Partial<NutritionData>) => Promise<void>;
+  updateUserProfile: (profile: Partial<UserProfileData>) => Promise<void>;
+  addWeightEntry: (weight: number) => Promise<void>;
+  deleteWeightEntry: (date: string) => Promise<void>;
+  toggleDarkMode: () => void;
+  checkAndResetDaily: () => void;
+}
+
 // Create a Zustand store with the default state that wraps Supabase operations
-export const useAppStore = create((set, get) => {
-  let _meals = [];
-  let _dailyTotals = { calories: 0, protein: 0, carbs: 0, fat: 0 };
-  let _userData = null;
-  let _weightEntries = [];
+export const useAppStore = create<AppState>((set, get) => {
+  let _meals: Meal[] = []; // Add type
+  let _dailyTotals: NutritionData = { calories: 0, protein: 0, carbs: 0, fat: 0 }; // Add type
+  let _userData: any = null; // Add type for _userData
+  let _weightEntries: any[] = []; // Add type for _weightEntries
   let _initialized = false;
   
   // Helper function to convert Supabase meal to app store meal format
@@ -233,7 +286,7 @@ export const useAppStore = create((set, get) => {
         
         if (queryClient) {
           console.log('Invalidating React Query caches...');
-          queryClient.invalidateQueries({ queryKey: ['meals'] });
+          // queryClient.invalidateQueries({ queryKey: ['meals'] }); // Commented out to prevent CancelledError, as useMeals handles its own invalidation
           queryClient.invalidateQueries({ queryKey: ['user'] });
           queryClient.invalidateQueries({ queryKey: ['weight'] });
         } else {
@@ -313,10 +366,18 @@ export const useAppStore = create((set, get) => {
         const mealsHook = useMeals();
         
         // Convert from app format to Supabase format
-        const supabaseUpdates = {};
-        if ('mealName' in updates) {
-          supabaseUpdates.meal_name = Array.isArray(updates.mealName) 
-            ? updates.mealName[0] 
+        const supabaseUpdates: Partial<{
+          meal_name?: string;
+          ingredients?: string[];
+          calories?: number;
+          protein?: number;
+          carbs?: number;
+          fat?: number;
+          image_url?: string;
+        }> = {};
+        if ('mealName' in updates && updates.mealName !== undefined) {
+          supabaseUpdates.meal_name = Array.isArray(updates.mealName)
+            ? updates.mealName[0]
             : updates.mealName;
         }
         if ('ingredients' in updates) supabaseUpdates.ingredients = updates.ingredients;
@@ -326,7 +387,7 @@ export const useAppStore = create((set, get) => {
         if ('fat' in updates) supabaseUpdates.fat = updates.fat;
         if ('imageUrl' in updates) supabaseUpdates.image_url = updates.imageUrl;
         
-        await mealsHook.updateMeal(id, supabaseUpdates);
+        await mealsHook.updateMeal(id, supabaseUpdates as any); // Use 'as any' for now if precise Supabase type is complex
         
         // Refresh all data to update the UI
         await loadAllData();
@@ -359,13 +420,18 @@ export const useAppStore = create((set, get) => {
         const userHook = useUser();
         
         // Convert from app format to Supabase format
-        const updates = {};
-        if ('calories' in goals) updates.target_calories = goals.calories;
-        if ('protein' in goals) updates.target_protein = goals.protein;
-        if ('carbs' in goals) updates.target_carbs = goals.carbs;
-        if ('fat' in goals) updates.target_fat = goals.fat;
+        const supabaseUserUpdates: Partial<{
+          target_calories?: number;
+          target_protein?: number;
+          target_carbs?: number;
+          target_fat?: number;
+        }> = {};
+        if ('calories' in goals) supabaseUserUpdates.target_calories = goals.calories;
+        if ('protein' in goals) supabaseUserUpdates.target_protein = goals.protein;
+        if ('carbs' in goals) supabaseUserUpdates.target_carbs = goals.carbs;
+        if ('fat' in goals) supabaseUserUpdates.target_fat = goals.fat;
         
-        await userHook.updateUserProfile(updates);
+        await userHook.updateUserProfile(supabaseUserUpdates);
         
         // Refresh all data to update the UI
         await loadAllData();

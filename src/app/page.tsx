@@ -1,12 +1,14 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useRouter } from 'next/navigation'; // Import useRouter
 import { motion } from 'framer-motion';
 import UserDashboard from "@/components/app/UserDashboard";
 import { useAppStore } from '@/store/useAppStore';
 import { useUser } from '@/hooks/useUser';
 
 export default function Home() {
+  const router = useRouter(); // Call useRouter at the top level
   const checkAndResetDaily = useAppStore((state) => state.checkAndResetDaily);
   const { user } = useUser();
   
@@ -26,16 +28,16 @@ export default function Home() {
     
     // Force prefetch other routes to ensure navigation works correctly
     const prefetchRoutes = async () => {
-      const { default: router } = await import('next/navigation').then(
-        module => ({ default: module.useRouter() })
-      );
+      // Dynamically import 'next/navigation' if needed, but router is already available
+      // const navigationModule = await import('next/navigation');
+      // The router instance is already available from the hook call above.
       
       router?.prefetch('/history');
       router?.prefetch('/customize');
     };
     
     prefetchRoutes().catch(console.error);
-  }, []);
+  }, [router]); // Add router to dependency array
 
   return (
     <div className="container px-4 py-8 max-w-7xl mx-auto">

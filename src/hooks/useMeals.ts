@@ -13,6 +13,7 @@ export function useMeals() {
   
   // Define query function
   const fetchMeals = useCallback(async () => {
+    console.log('[useMeals] fetchMeals called. User ID:', user?.id); // Added log
     if (!user) {
       return {
         allMeals: [],
@@ -117,9 +118,9 @@ export function useMeals() {
         throw error;
       }
       
-      console.log('Meal added successfully, invalidating query cache');
+      console.log('Meal added successfully, invalidating query cache for key:', ['meals', user?.id]); // Updated log
       // Invalidate queries to trigger a refresh
-      queryClient.invalidateQueries({ queryKey: ['meals'] });
+      queryClient.invalidateQueries({ queryKey: ['meals', user?.id] }); // Made invalidation specific
       
       return data as Meal;
     } catch (err) {
@@ -146,8 +147,9 @@ export function useMeals() {
         throw error;
       }
       
+      console.log('Meal updated successfully, invalidating query cache for key:', ['meals', user?.id]); // Added log
       // Invalidate queries to trigger a refresh
-      queryClient.invalidateQueries({ queryKey: ['meals'] });
+      queryClient.invalidateQueries({ queryKey: ['meals', user?.id] }); // Made invalidation specific
       
       return data as Meal;
     } catch (err) {
@@ -172,8 +174,9 @@ export function useMeals() {
         throw error;
       }
       
+      console.log('Meal deleted successfully, invalidating query cache for key:', ['meals', user?.id]); // Added log
       // Invalidate queries to trigger a refresh
-      queryClient.invalidateQueries({ queryKey: ['meals'] });
+      queryClient.invalidateQueries({ queryKey: ['meals', user?.id] }); // Made invalidation specific
     } catch (err) {
       console.error('Error deleting meal:', err);
       throw err;
