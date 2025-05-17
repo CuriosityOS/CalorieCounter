@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "/root/CalorieCounter/logs/.d45170c443bb45e4adaaa2c92825cec98d07e53c-audit.json",
+    "files": [
+        {
+            "date": 1746003094293,
+            "name": "/root/CalorieCounter/logs/mcp-puppeteer-2025-04-30.log",
+            "hash": "5600bda83af5c9e3a031cfcae974b0d7213562f161e4a786deda177316fc0f7b"
+        }
+    ],
+    "hashType": "sha256"
+}
