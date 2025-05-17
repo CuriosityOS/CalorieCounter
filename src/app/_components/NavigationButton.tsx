@@ -25,7 +25,9 @@ export default function NavigationButton({ href, className, children, onClick }:
     // Add a small delay to allow any other handlers to complete
     setTimeout(() => {
       console.log('Navigating to:', href);
-      router.push(href);
+      // Adjust the navigation path for home/dashboard
+      const targetPath = href === '/' && window.location.pathname !== '/' ? '/dashboard' : href;
+      router.push(targetPath);
     }, 10);
   };
   

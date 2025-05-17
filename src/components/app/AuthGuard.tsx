@@ -8,8 +8,8 @@ interface AuthGuardProps {
   children: React.ReactNode;
 }
 
-const publicPaths = ['/login', '/signup'];
-const appPaths = ['/', '/history', '/customize'];
+const publicPaths = ['/login', '/signup', '/']; // Add home page to public paths
+const appPaths = ['/dashboard', '/history', '/customize'];
 
 export default function AuthGuard({ children }: AuthGuardProps) {
   const { user, loading } = useAuth();
@@ -36,14 +36,18 @@ export default function AuthGuard({ children }: AuthGuardProps) {
       // Not logged in and trying to access a protected route
       console.log('Redirecting to login from:', pathname);
       router.replace('/login');
-    } else if (user && isPublicPath) {
+    } else if (user && isPublicPath && pathname !== '/') {
       // Already logged in and trying to access login/signup
-      console.log('Redirecting to home from:', pathname);
-      router.replace('/');
-    } else if (pathname !== '/' && !isAppPath && !isPublicPath) {
-      // Handle invalid routes
-      console.log('Invalid route, redirecting to home from:', pathname);
-      router.replace('/');
+      console.log('Redirecting to dashboard from:', pathname);
+      router.replace('/dashboard');
+    } else if (!isAppPath && !isPublicPath) {
+      // Handle invalid routes - redirect to dashboard if logged in, otherwise to landing page
+      console.log('Invalid route, redirecting from:', pathname);
+      if (user) {
+        router.replace('/dashboard');
+      } else {
+        router.replace('/');
+      }
     } else {
       // Either logged in and accessing protected route, or not logged in and accessing public route
       setIsAuthorized(true);

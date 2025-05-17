@@ -36,8 +36,8 @@ export default function NavBar() {
     }
   };
 
-  // Don't show navbar on auth pages
-  if (pathname === '/login' || pathname === '/signup') {
+  // Don't show navbar on auth pages or landing page
+  if (pathname === '/login' || pathname === '/signup' || pathname === '/') {
     return null;
   }
 
@@ -46,7 +46,7 @@ export default function NavBar() {
       <div className="container flex h-16 items-center px-4">
         <div className="mr-4 flex items-center">
           <Link href="/" className="flex items-center space-x-2">
-            <img src="/food-scale.svg" alt="CalorieCounter" className="h-6 w-6 text-primary" />
+            <img src="/logo.png" alt="CalorieCounter" className="h-10 w-auto" />
             <span className="font-bold text-xl hidden md:inline-block">CalorieCounter</span>
           </Link>
         </div>
