@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { formatTime } from '@/lib/utils';
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -185,7 +185,7 @@ interface MealHistoryProps {
   selectedDate?: Date;
 }
 
-export default function MealHistory({ limit, showTitle = true, className = "", selectedDate }: MealHistoryProps) {
+export default function MealHistory({ limit, showTitle = true, className = "" }: Omit<MealHistoryProps, 'selectedDate'>) {
   // Get hook functions
   const { todayMeals, updateMeal: updateMealInSupabase, deleteMeal: deleteMealFromSupabase } = useMeals();
   const { user: authUser } = useAuth();
@@ -330,7 +330,7 @@ export default function MealHistory({ limit, showTitle = true, className = "", s
           
           // Update the meal with the new info
           try {
-            await updateMealInSupabase(mealId, updateData as any); // Using 'as any' temporarily if Supabase type is complex
+            await updateMealInSupabase(mealId, updateData);
             console.log('Meal updated with AI results');
             refreshAll();
           } catch (updateError) {

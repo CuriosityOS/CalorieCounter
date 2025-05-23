@@ -3,22 +3,18 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { formatDate } from '@/lib/utils';
-import { Filter, Calendar, X, UtensilsCrossed } from 'lucide-react';
+import { Filter, X, UtensilsCrossed } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import DateNavigation from '@/components/app/DateNavigation';
-import { supabase } from '@/lib/supabase-client';
+import { supabase, type User } from '@/lib/supabase-client';
 import { useAuth } from '@/hooks/useAuth';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import NutritionCircles from '@/components/app/NutritionCircles';
 
 export default function HistoryPage() {
-  // Make this an explicit client component
-  if (typeof window === 'undefined') {
-    return null; // Will never render this on server
-  }
   const { user } = useAuth();
   const nutritionGoals = useAppStore((state) => state.userPreferences.nutritionGoals);
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -27,14 +23,24 @@ export default function HistoryPage() {
   const [dateNutrition, setDateNutrition] = useState({
     calories: 0, protein: 0, carbs: 0, fat: 0
   });
-  const [dateMeals, setDateMeals] = useState<any[]>([]);
+  const [dateMeals, setDateMeals] = useState<Array<{
+    id: string;
+    meal_name: string;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    created_at: string;
+    image_url?: string;
+    ingredients?: string[];
+  }>>([]);
   
   // Use user's custom targets if available, otherwise use app's default goals
   const targets = {
-    calories: user?.target_calories || nutritionGoals.calories,
-    protein: user?.target_protein || nutritionGoals.protein,
-    carbs: user?.target_carbs || nutritionGoals.carbs,
-    fat: user?.target_fat || nutritionGoals.fat,
+    calories: (user as User)?.target_calories || nutritionGoals.calories,
+    protein: (user as User)?.target_protein || nutritionGoals.protein,
+    carbs: (user as User)?.target_carbs || nutritionGoals.carbs,
+    fat: (user as User)?.target_fat || nutritionGoals.fat,
   };
   
   // Fetch meals for the selected date
@@ -127,6 +133,11 @@ export default function HistoryPage() {
       hour12: true
     });
   };
+
+  // Handle SSR
+  if (typeof window === 'undefined') {
+    return null;
+  }
 
   return (
     <div className="container px-4 py-6 max-w-7xl mx-auto space-y-6">

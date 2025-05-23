@@ -7,7 +7,6 @@ import { useUser } from '@/hooks/useUser';
 import { Card, CardContent, CardHeader } from '../ui/card';
 import NutritionCircles from './NutritionCircles';
 import DateNavigation from './DateNavigation';
-import { useAuth } from '@/hooks/useAuth';
 import { useMeals } from '@/hooks/useMeals';
 
 interface NutritionDashboardProps {
@@ -55,8 +54,19 @@ export default function NutritionDashboard({
       
       if (!lastDay || lastDay !== today) {
         localStorage.setItem('last-active-day', today);
-        // Force refresh meals data when a new day is detected
-        window.location.reload();
+        // Refresh data when a new day is detected using React Query invalidation
+        const refreshData = async () => {
+          try {
+            const { queryClient } = await import('@/providers/QueryProvider');
+            if (queryClient) {
+              queryClient.invalidateQueries({ queryKey: ['meals'] });
+              queryClient.invalidateQueries({ queryKey: ['user'] });
+            }
+          } catch (error) {
+            console.error('Failed to refresh data:', error);
+          }
+        };
+        refreshData();
       }
     }
   }, []);

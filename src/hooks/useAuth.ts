@@ -111,7 +111,6 @@ export function useAuth(): UseAuthReturn {
       
       console.log('Sign in successful, user:', data?.user);
       router.push('/');
-      return data;
     } catch (err) {
       console.error('Error signing in:', err);
       setError(err instanceof Error ? err : new Error(String(err)));
@@ -159,7 +158,7 @@ export function useAuth(): UseAuthReturn {
     } finally {
       setLoading(false);
     }
-  }, [router]);
+  }, []);
 
   return {
     user,

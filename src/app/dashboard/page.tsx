@@ -11,7 +11,7 @@ import AuthGuard from '@/components/app/AuthGuard';
 export default function DashboardPage() {
   const router = useRouter();
   const checkAndResetDaily = useAppStore((state) => state.checkAndResetDaily);
-  const { user, loading } = useUser();
+  const { user } = useUser();
   
   // Check if we need to reset daily nutrition counters
   useEffect(() => {
@@ -21,9 +21,26 @@ export default function DashboardPage() {
       const lastDay = localStorage.getItem('last-active-day');
       
       if (!lastDay || lastDay !== today) {
-        console.log('New day detected in Dashboard page, refreshing');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('New day detected in Dashboard page, refreshing data');
+        }
         localStorage.setItem('last-active-day', today);
-        window.location.reload();
+        // Use React Query invalidation instead of full page reload
+        const refreshData = async () => {
+          try {
+            const { queryClient } = await import('@/providers/QueryProvider');
+            if (queryClient) {
+              queryClient.invalidateQueries({ queryKey: ['meals'] });
+              queryClient.invalidateQueries({ queryKey: ['user'] });
+            }
+            checkAndResetDaily();
+          } catch (error) {
+            if (process.env.NODE_ENV === 'development') {
+              console.error('Failed to refresh data:', error);
+            }
+          }
+        };
+        refreshData();
       }
     }
     
@@ -34,7 +51,7 @@ export default function DashboardPage() {
     };
     
     prefetchRoutes().catch(console.error);
-  }, [router]);
+  }, [router, checkAndResetDaily]);
 
   return (
     <AuthGuard>

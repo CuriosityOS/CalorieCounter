@@ -141,7 +141,7 @@ export function useUser() {
       console.log("Attempting to fetch user profile for:", authUser.id);
       fetchUserProfile();
     }
-  }, [fetchUserProfile, authUser?.id]);
+  }, [fetchUserProfile, authUser]);
 
   const updateUserProfile = useCallback(async (updates: Partial<User>) => {
     if (!authUser) {

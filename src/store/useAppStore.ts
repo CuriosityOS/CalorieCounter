@@ -1,8 +1,7 @@
 'use client';
 
-import { create, StateCreator } from 'zustand'; // Import StateCreator
-// DO NOT directly import hooks at the top level to avoid circular dependencies
-// Hooks will be dynamically imported when needed
+import { create } from 'zustand';
+import { supabase } from '@/lib/supabase-client';
 
 // Fallback state to use when hooks are not available (during SSR or in components that call the store outside React components)
 const defaultState = {
@@ -62,7 +61,7 @@ interface UserProfileData {
   height?: number;
   age?: number;
   gender?: "male" | "female" | undefined; // Adjusted gender type
-  activityLevel?: string;
+  activityLevel?: number;
   goalOffset?: number;
 }
 
@@ -103,15 +102,40 @@ export interface AppState {
 }
 
 // Create a Zustand store with the default state that wraps Supabase operations
-export const useAppStore = create<AppState>((set, get) => {
+export const useAppStore = create<AppState>((set) => {
   let _meals: Meal[] = []; // Add type
   let _dailyTotals: NutritionData = { calories: 0, protein: 0, carbs: 0, fat: 0 }; // Add type
-  let _userData: any = null; // Add type for _userData
-  let _weightEntries: any[] = []; // Add type for _weightEntries
-  let _initialized = false;
+  let _userData: {
+    id?: string;
+    weight?: number;
+    height?: number;
+    age?: number;
+    gender?: string;
+    activity_level?: number;
+    goal_offset?: number;
+    target_calories?: number;
+    target_protein?: number;
+    target_carbs?: number;
+    target_fat?: number;
+  } | null = null; // Add type for _userData
+  let _weightEntries: Array<{
+    id: string;
+    weight: number;
+    created_at: string;
+  }> = [];
   
   // Helper function to convert Supabase meal to app store meal format
-  const formatMeal = (meal: any): Meal => ({
+  const formatMeal = (meal: {
+    id: string;
+    meal_name: string;
+    ingredients?: string[];
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    created_at: string;
+    image_url?: string;
+  }): Meal => ({
     id: meal.id,
     mealName: meal.meal_name || 'Unknown Meal',
     ingredients: meal.ingredients || [],
@@ -199,15 +223,16 @@ export const useAppStore = create<AppState>((set, get) => {
       ]);
       
       // Filter for today's meals to calculate daily totals
-      const today = new Date();
-      const { isToday } = await import('@/lib/utils');
-      
       const meals = mealsResponse.data || [];
       // Ensure proper date conversion and add debug logging
       const todayMeals = meals.filter(meal => {
         const mealDate = new Date(meal.created_at);
-        console.log(`Store filtering: meal ${meal.meal_name}, date: ${mealDate.toISOString()}, isToday: ${isToday(mealDate)}`);
-        return isToday(mealDate);
+        const today = new Date();
+        const isMealToday = mealDate.toDateString() === today.toDateString();
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`Store filtering: meal ${meal.meal_name}, date: ${mealDate.toISOString()}, isToday: ${isMealToday}`);
+        }
+        return isMealToday;
       });
       
       // Calculate daily totals
@@ -246,7 +271,7 @@ export const useAppStore = create<AppState>((set, get) => {
             weight: _userData?.weight,
             height: _userData?.height,
             age: _userData?.age,
-            gender: _userData?.gender,
+            gender: _userData?.gender as 'male' | 'female' | undefined,
             activityLevel: _userData?.activity_level,
             goalOffset: _userData?.goal_offset,
           },
@@ -257,8 +282,6 @@ export const useAppStore = create<AppState>((set, get) => {
           lastDailyReset: new Date().toISOString().split('T')[0],
         }
       });
-      
-      _initialized = true;
     } catch (err) {
       console.error('Failed to load data from Supabase:', err);
     }
@@ -277,34 +300,12 @@ export const useAppStore = create<AppState>((set, get) => {
     
     // Method to fetch all data from Supabase and update the store
     refreshAll: async () => {
-      // Try to import queryClient and invalidate relevant queries first
-      try {
-        // Dynamically import queryClient
-        const { default: queryClient } = await import('@/providers/QueryProvider').then(module => ({
-          default: module.queryClient
-        })).catch(() => ({ default: null }));
-        
-        if (queryClient) {
-          console.log('Invalidating React Query caches...');
-          // queryClient.invalidateQueries({ queryKey: ['meals'] }); // Commented out to prevent CancelledError, as useMeals handles its own invalidation
-          queryClient.invalidateQueries({ queryKey: ['user'] });
-          queryClient.invalidateQueries({ queryKey: ['weight'] });
-        } else {
-          console.log('Query client not available, falling back to direct data load');
-        }
-      } catch (err) {
-        console.error('Error invalidating queries:', err);
-      }
-      
-      // Always load data directly as fallback
       await loadAllData();
     },
     
-    // Override methods to call Supabase operations
+    // Add meal directly to Supabase
     addMeal: async (mealData) => {
       try {
-        // Use direct Supabase query to avoid hook issues
-        const { supabase } = await import('@/lib/supabase-client');
         const { data: { session } } = await supabase.auth.getSession();
         const authUser = session?.user;
         
@@ -336,19 +337,6 @@ export const useAppStore = create<AppState>((set, get) => {
           throw error;
         }
         
-        // Try to invalidate React Query cache
-        try {
-          const { queryClient } = await import('@/providers/QueryProvider');
-          if (queryClient) {
-            console.log('Invalidating meals queries...');
-            queryClient.invalidateQueries({ queryKey: ['meals'] });
-            queryClient.fetchQuery({ queryKey: ['meals', authUser.id] })
-              .catch(err => console.error('Error fetching meals after invalidation:', err));
-          }
-        } catch (invalidateErr) {
-          console.error('Error invalidating queries:', invalidateErr);
-        }
-        
         // Refresh app state data
         await loadAllData();
         
@@ -361,10 +349,6 @@ export const useAppStore = create<AppState>((set, get) => {
     
     updateMeal: async (id, updates) => {
       try {
-        // Import dynamically to avoid SSR issues
-        const { useMeals } = await import('@/hooks/useMeals');
-        const mealsHook = useMeals();
-        
         // Convert from app format to Supabase format
         const supabaseUpdates: Partial<{
           meal_name?: string;
@@ -375,6 +359,7 @@ export const useAppStore = create<AppState>((set, get) => {
           fat?: number;
           image_url?: string;
         }> = {};
+        
         if ('mealName' in updates && updates.mealName !== undefined) {
           supabaseUpdates.meal_name = Array.isArray(updates.mealName)
             ? updates.mealName[0]
@@ -387,37 +372,52 @@ export const useAppStore = create<AppState>((set, get) => {
         if ('fat' in updates) supabaseUpdates.fat = updates.fat;
         if ('imageUrl' in updates) supabaseUpdates.image_url = updates.imageUrl;
         
-        await mealsHook.updateMeal(id, supabaseUpdates as any); // Use 'as any' for now if precise Supabase type is complex
+        const { error } = await supabase
+          .from('meals')
+          .update(supabaseUpdates)
+          .eq('id', id);
+          
+        if (error) {
+          throw error;
+        }
         
         // Refresh all data to update the UI
         await loadAllData();
         
       } catch (err) {
         console.error('Failed to update meal in Supabase:', err);
+        throw err;
       }
     },
     
     deleteMeal: async (id) => {
       try {
-        // Import dynamically to avoid SSR issues
-        const { useMeals } = await import('@/hooks/useMeals');
-        const mealsHook = useMeals();
-        
-        await mealsHook.deleteMeal(id);
+        const { error } = await supabase
+          .from('meals')
+          .delete()
+          .eq('id', id);
+          
+        if (error) {
+          throw error;
+        }
         
         // Refresh all data to update the UI
         await loadAllData();
         
       } catch (err) {
         console.error('Failed to delete meal from Supabase:', err);
+        throw err;
       }
     },
     
     updateNutritionGoals: async (goals) => {
       try {
-        // Import dynamically to avoid SSR issues
-        const { useUser } = await import('@/hooks/useUser');
-        const userHook = useUser();
+        const { data: { session } } = await supabase.auth.getSession();
+        const authUser = session?.user;
+        
+        if (!authUser) {
+          throw new Error('User not authenticated');
+        }
         
         // Convert from app format to Supabase format
         const supabaseUserUpdates: Partial<{
@@ -426,65 +426,96 @@ export const useAppStore = create<AppState>((set, get) => {
           target_carbs?: number;
           target_fat?: number;
         }> = {};
+        
         if ('calories' in goals) supabaseUserUpdates.target_calories = goals.calories;
         if ('protein' in goals) supabaseUserUpdates.target_protein = goals.protein;
         if ('carbs' in goals) supabaseUserUpdates.target_carbs = goals.carbs;
         if ('fat' in goals) supabaseUserUpdates.target_fat = goals.fat;
         
-        await userHook.updateUserProfile(supabaseUserUpdates);
+        const { error } = await supabase
+          .from('users')
+          .update(supabaseUserUpdates)
+          .eq('id', authUser.id);
+          
+        if (error) {
+          throw error;
+        }
         
         // Refresh all data to update the UI
         await loadAllData();
         
       } catch (err) {
         console.error('Failed to update nutrition goals in Supabase:', err);
+        throw err;
       }
     },
     
     updateUserProfile: async (profile) => {
       try {
-        // Import dynamically to avoid SSR issues
-        const { useUser } = await import('@/hooks/useUser');
-        const userHook = useUser();
+        const { data: { session } } = await supabase.auth.getSession();
+        const authUser = session?.user;
         
-        await userHook.updateUserProfile(profile);
+        if (!authUser) {
+          throw new Error('User not authenticated');
+        }
+        
+        const { error } = await supabase
+          .from('users')
+          .update(profile)
+          .eq('id', authUser.id);
+          
+        if (error) {
+          throw error;
+        }
         
         // Refresh all data to update the UI
         await loadAllData();
         
       } catch (err) {
         console.error('Failed to update user profile in Supabase:', err);
+        throw err;
       }
     },
     
     addWeightEntry: async (weight) => {
       try {
-        // Import dynamically to avoid SSR issues
-        const { useWeightHistory } = await import('@/hooks/useWeightHistory');
-        const { useUser } = await import('@/hooks/useUser');
+        const { data: { session } } = await supabase.auth.getSession();
+        const authUser = session?.user;
         
-        const weightHook = useWeightHistory();
-        const userHook = useUser();
+        if (!authUser) {
+          throw new Error('User not authenticated');
+        }
         
-        await weightHook.addWeightEntry(weight);
+        // Add weight entry
+        const { error: weightError } = await supabase
+          .from('weight_entries')
+          .insert([{ user_id: authUser.id, weight }]);
+          
+        if (weightError) {
+          throw weightError;
+        }
         
         // Also update the current weight in the user profile
-        await userHook.updateUserProfile({ weight });
+        const { error: userError } = await supabase
+          .from('users')
+          .update({ weight })
+          .eq('id', authUser.id);
+          
+        if (userError) {
+          throw userError;
+        }
         
         // Refresh all data to update the UI
         await loadAllData();
         
       } catch (err) {
         console.error('Failed to add weight entry to Supabase:', err);
+        throw err;
       }
     },
     
     deleteWeightEntry: async (date) => {
       try {
-        // Import dynamically to avoid SSR issues
-        const { useWeightHistory } = await import('@/hooks/useWeightHistory');
-        const weightHook = useWeightHistory();
-        
         // Find the entry with this date
         const entry = _weightEntries.find(e => 
           new Date(e.created_at).toISOString().split('T')[0] === date
@@ -493,13 +524,21 @@ export const useAppStore = create<AppState>((set, get) => {
         );
         
         if (entry) {
-          await weightHook.deleteWeightEntry(entry.id);
+          const { error } = await supabase
+            .from('weight_entries')
+            .delete()
+            .eq('id', entry.id);
+            
+          if (error) {
+            throw error;
+          }
           
           // Refresh all data to update the UI
           await loadAllData();
         }
       } catch (err) {
         console.error('Failed to delete weight entry from Supabase:', err);
+        throw err;
       }
     },
     
@@ -516,7 +555,9 @@ export const useAppStore = create<AppState>((set, get) => {
       const lastReset = window.localStorage.getItem('last-nutrition-reset') || '';
       
       if (today !== lastReset) {
-        console.log('New day detected, refreshing nutrition data');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('New day detected, refreshing nutrition data');
+        }
         window.localStorage.setItem('last-nutrition-reset', today);
         // Don't use window.location.reload() since it's handled in the component
         loadAllData();

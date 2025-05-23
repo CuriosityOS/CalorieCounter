@@ -24,16 +24,8 @@ import { ChevronRight, Scale, Dumbbell, Calculator, Send, BarChart4 } from 'luci
 // Emergency form removed
 
 export default function CustomizePage() {
-  // Make this an explicit client component
-  if (typeof window === 'undefined') {
-    return null; // Will never render this on server
-  }
-  
   const { user: authUser } = useAuth();
-  const updateNutritionGoals = useAppStore((state) => state.updateNutritionGoals);
-  const updateUserProfile = useAppStore((state) => state.updateUserProfile);
   const refreshAll = useAppStore((state) => state.refreshAll);
-  const userPreferences = useAppStore((state) => state.userPreferences);
   const { chartData, addWeightEntry } = useWeightHistory();
   
   // Use data from user profile directly
@@ -224,7 +216,7 @@ export default function CustomizePage() {
       }, 3000);
     } catch (err) {
       console.error('Failed to save profile:', err);
-      setError(`Failed to save profile: ${err.message}`);
+      setError(`Failed to save profile: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setLoading(false);
     }
@@ -244,6 +236,11 @@ export default function CustomizePage() {
     setWeight(weightValue);
     setFormChanged(true);
   };
+
+  // Handle SSR
+  if (typeof window === 'undefined') {
+    return null;
+  }
   
   return (
     <div className="container px-4 py-8 max-w-7xl mx-auto">
@@ -589,7 +586,7 @@ export default function CustomizePage() {
                         />
                         <YAxis
                           domain={[
-                            (dataMin) => {
+                            () => {
                               // Handle empty data case
                               if (!chartData.length) return 0;
                               
@@ -605,7 +602,7 @@ export default function CustomizePage() {
                               // Subtract a buffer and round down to nearest 5
                               return Math.floor((minWeight - 2) / 5) * 5;
                             },
-                            (dataMax) => {
+                            () => {
                               // Handle empty data case
                               if (!chartData.length) return 100;
                               

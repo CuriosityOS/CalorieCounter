@@ -35,14 +35,21 @@ export default function LoginPage() {
     }
     
     try {
-      // Clear console of any previous errors to make debugging easier
-      console.clear();
-      console.log('Attempting to sign in with:', email);
+      // Clear console of any previous errors to make debugging easier (dev only)
+      if (process.env.NODE_ENV === 'development') {
+        console.clear();
+        console.log('Attempting to sign in with:', email);
+      }
       
       const result = await signIn(email, password);
-      console.log('Sign in result:', result);
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Sign in result:', result);
+      }
     } catch (err) {
-      console.error('Sign in error:', err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Sign in error:', err);
+      }
       setAuthError(err instanceof Error ? err.message : 'An error occurred during login');
     }
   };

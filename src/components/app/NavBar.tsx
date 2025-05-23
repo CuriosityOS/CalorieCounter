@@ -2,13 +2,13 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useAppStore } from '@/store/useAppStore';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
-import { Menu, X, Scale, History, Settings, LogOut, Home, RefreshCw } from 'lucide-react';
-import NavigationButton from '@/app/_components/NavigationButton';
+import { Menu, X, History, Settings, LogOut, Home, RefreshCw } from 'lucide-react';
 import ThemeToggle from '../ui/theme-toggle';
 
 const navLinks = [
@@ -21,7 +21,6 @@ export default function NavBar() {
   const { user, signOut } = useAuth();
   const refreshAll = useAppStore((state) => state.refreshAll);
   const pathname = usePathname();
-  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -46,7 +45,7 @@ export default function NavBar() {
       <div className="container flex h-16 items-center px-4">
         <div className="mr-4 flex items-center">
           <Link href="/" className="flex items-center space-x-2">
-            <img src="/logo.png" alt="CalorieCounter" className="h-10 w-auto" />
+            <Image src="/logo.png" alt="CalorieCounter" width={40} height={40} className="h-10 w-auto" />
             <span className="font-bold text-xl hidden md:inline-block">CalorieCounter</span>
           </Link>
         </div>

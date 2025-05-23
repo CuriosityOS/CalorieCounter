@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 // Get environment variables
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://caloriecounter.lol';
+// const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://caloriecounter.lol';
 
 // Check for required environment variables
 if (!supabaseUrl || !supabaseAnonKey) {
@@ -23,9 +23,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   }
 });
 
-// Make supabase URL and key accessible
-supabase.supabaseUrl = supabaseUrl;
-supabase.supabaseKey = supabaseAnonKey;
+// Supabase client is now configured and ready to use
 
 // Log client initialization for debugging
 if (process.env.NODE_ENV !== 'production') {
