@@ -7,7 +7,6 @@ import NavBar from "@/components/app/NavBar";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "next-themes";
 import DirectNavigationLinks from "./_components/DirectNavigationLinks";
-import Script from "next/script";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
