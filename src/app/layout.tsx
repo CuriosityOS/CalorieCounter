@@ -71,22 +71,7 @@ export default function RootLayout({
             </AuthGuard>
           </QueryProvider>
         </ThemeProvider>
-        <Script
-          id="register-sw"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator && window.location.hostname !== 'localhost') {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').then(
-                    function(registration) { console.log('Service Worker registration successful'); },
-                    function(err) { console.log('Service Worker registration failed: ', err); }
-                  );
-                });
-              }
-            `,
-          }}
-        />
+{/* Service Worker disabled to prevent false offline states on Vercel */}
       </body>
     </html>
   );
