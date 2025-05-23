@@ -41,42 +41,46 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch event - serve from cache if available, otherwise fetch from network
+// Fetch event - use network-first strategy to avoid false offline states
 self.addEventListener('fetch', (event) => {
+  // Skip service worker for API calls and external domains
+  if (event.request.url.includes('/api/') || 
+      event.request.url.includes('supabase.co') ||
+      event.request.url.includes('openrouter.ai') ||
+      !event.request.url.startsWith(self.location.origin)) {
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      if (response) {
-        return response;
-      }
-
-      // Clone the request because it's a one-time use
-      const fetchRequest = event.request.clone();
-
-      return fetch(fetchRequest)
-        .then((response) => {
-          // Check if we received a valid response
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
-          }
-
-          // Clone the response because it's a one-time use
+    // Try network first
+    fetch(event.request.clone())
+      .then((response) => {
+        // Check if we received a valid response
+        if (response && response.status === 200 && response.type === 'basic') {
+          // Clone the response for caching
           const responseToCache = response.clone();
-
+          
           caches.open(CACHE_NAME).then((cache) => {
-            // Don't cache API requests
-            if (!event.request.url.includes('/api/')) {
-              cache.put(event.request, responseToCache);
-            }
+            cache.put(event.request, responseToCache);
           });
-
-          return response;
-        })
-        .catch(() => {
-          // If fetch fails (offline), show offline page
+        }
+        return response;
+      })
+      .catch(() => {
+        // Network failed, try cache
+        return caches.match(event.request).then((cachedResponse) => {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          
+          // If it's a navigation request and no cache, show offline page
           if (event.request.mode === 'navigate') {
             return caches.match('/offline.html');
           }
+          
+          // For other requests, let them fail naturally
+          throw new Error('Network failed and no cache available');
         });
-    })
+      })
   );
 });
