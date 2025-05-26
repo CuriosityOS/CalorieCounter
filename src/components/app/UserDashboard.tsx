@@ -1,18 +1,35 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, Suspense } from 'react';
 import { motion } from 'framer-motion';
-import ImageUploader from './ImageUploader';
-import NutritionDisplay from './NutritionDisplay';
-import MealHistory from './MealHistory';
+import dynamic from 'next/dynamic';
 import NutritionDashboard from './NutritionDashboard';
-import FoodDescriptionAnalyzer from './FoodDescriptionAnalyzer';
-import ManualFoodEntry from './ManualFoodEntry';
 import { useAnalyzeImage } from '@/hooks/useAnalyzeImage';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { UtensilsCrossed, Camera } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { formatDate } from '@/lib/utils';
+
+// Lazy load heavy components
+const ImageUploader = dynamic(() => import('./ImageUploader'), {
+  loading: () => <div className="h-48 animate-pulse bg-secondary/20 rounded-lg" />,
+});
+
+const NutritionDisplay = dynamic(() => import('./NutritionDisplay'), {
+  loading: () => <div className="h-32 animate-pulse bg-secondary/20 rounded-lg" />,
+});
+
+const MealHistory = dynamic(() => import('./MealHistory'), {
+  loading: () => <div className="h-96 animate-pulse bg-secondary/20 rounded-lg" />,
+});
+
+const FoodDescriptionAnalyzer = dynamic(() => import('./FoodDescriptionAnalyzer'), {
+  loading: () => <div className="h-48 animate-pulse bg-secondary/20 rounded-lg" />,
+});
+
+const ManualFoodEntry = dynamic(() => import('./ManualFoodEntry'), {
+  loading: () => <div className="h-48 animate-pulse bg-secondary/20 rounded-lg" />,
+});
 
 export default function UserDashboard() {
   const analyzeImageMutation = useAnalyzeImage();
@@ -33,10 +50,10 @@ export default function UserDashboard() {
     mutate: triggerAnalysis,
   } = analyzeImageMutation;
 
-  const handleImageUpload = (base64Image: string) => {
+  const handleImageUpload = useCallback((base64Image: string) => {
     console.log("Image ready for analysis, triggering mutation...");
     triggerAnalysis(base64Image);
-  };
+  }, [triggerAnalysis]);
 
   const containerAnimation = {
     hidden: { opacity: 0 },

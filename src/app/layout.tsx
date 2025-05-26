@@ -3,10 +3,15 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import QueryProvider from "@/providers/QueryProvider";
 import AuthGuard from "@/components/app/AuthGuard";
-import NavBar from "@/components/app/NavBar";
+import dynamic from "next/dynamic";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "next-themes";
 import DirectNavigationLinks from "./_components/DirectNavigationLinks";
+
+// Lazy load NavBar as it's not critical for initial render
+const NavBar = dynamic(() => import("@/components/app/NavBar"), {
+  ssr: true,
+});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

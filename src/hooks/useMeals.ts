@@ -76,16 +76,16 @@ export function useMeals() {
     }
   }, [user]);
   
-  // Create React Query for meals with lower staleTime and refetchOnWindowFocus
+  // Create React Query for meals with reasonable staleTime
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['meals', user?.id],
     queryFn: fetchMeals,
     enabled: !!user,
-    staleTime: 1000, // 1 second - more responsive to changes
-    refetchOnMount: true, // Always refetch on mount
-    refetchOnWindowFocus: true, // Refetch when window gets focus
-    refetchInterval: 5000, // Poll every 5 seconds for changes
-    retry: 3, // Retry failed queries 3 times
+    staleTime: 30000, // 30 seconds - prevent excessive refetching
+    refetchOnMount: 'always', // Always refetch on mount
+    refetchOnWindowFocus: false, // Don't refetch on window focus to reduce API calls
+    refetchInterval: false, // Disable polling - rely on invalidation after mutations
+    retry: 2, // Retry failed queries twice
   });
   
   // Extract meals from query data or use empty arrays as fallback

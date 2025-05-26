@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { memo, useMemo } from 'react';
 import CircularProgress from './CircularProgress';
 import { formatNumber } from '@/lib/utils';
 import { Pizza, Wheat, Beef, Droplet } from 'lucide-react';
@@ -20,14 +20,14 @@ interface NutritionCirclesProps {
   };
 }
 
-export default function NutritionCircles({ dailyNutrition, targets }: NutritionCirclesProps) {
+const NutritionCircles = memo(function NutritionCircles({ dailyNutrition, targets }: NutritionCirclesProps) {
   // Calculate progress percentages
-  const progress = {
+  const progress = useMemo(() => ({
     calories: Math.min(100, (dailyNutrition.calories / targets.calories) * 100),
     protein: Math.min(100, (dailyNutrition.protein / targets.protein) * 100),
     carbs: Math.min(100, (dailyNutrition.carbs / targets.carbs) * 100),
     fat: Math.min(100, (dailyNutrition.fat / targets.fat) * 100),
-  };
+  }), [dailyNutrition, targets]);
   
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 w-full">
@@ -96,4 +96,6 @@ export default function NutritionCircles({ dailyNutrition, targets }: NutritionC
       </div>
     </div>
   );
-}
+});
+
+export default NutritionCircles;

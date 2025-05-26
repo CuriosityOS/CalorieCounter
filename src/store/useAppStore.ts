@@ -224,15 +224,16 @@ export const useAppStore = create<AppState>((set) => {
       
       // Filter for today's meals to calculate daily totals
       const meals = mealsResponse.data || [];
-      // Ensure proper date conversion and add debug logging
+      // Ensure proper date conversion
+      const today = new Date();
+      const startOfDay = new Date(today);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(today);
+      endOfDay.setHours(23, 59, 59, 999);
+      
       const todayMeals = meals.filter(meal => {
         const mealDate = new Date(meal.created_at);
-        const today = new Date();
-        const isMealToday = mealDate.toDateString() === today.toDateString();
-        if (process.env.NODE_ENV === 'development') {
-          console.log(`Store filtering: meal ${meal.meal_name}, date: ${mealDate.toISOString()}, isToday: ${isMealToday}`);
-        }
-        return isMealToday;
+        return mealDate >= startOfDay && mealDate <= endOfDay;
       });
       
       // Calculate daily totals
@@ -287,12 +288,18 @@ export const useAppStore = create<AppState>((set) => {
     }
   };
 
-  // Initial data load
+  // Initial data load - use requestIdleCallback for better performance
   if (typeof window !== 'undefined') {
-    // Delay initial load to ensure all React components are mounted
-    setTimeout(() => {
-      loadAllData();
-    }, 100);
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(() => {
+        loadAllData();
+      });
+    } else {
+      // Fallback for Safari
+      Promise.resolve().then(() => {
+        loadAllData();
+      });
+    }
   }
 
   return {

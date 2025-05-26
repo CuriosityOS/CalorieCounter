@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, memo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import Image from 'next/image';
+import OptimizedImage from './OptimizedImage';
 import { Camera, UploadCloud, X } from 'lucide-react';
 
 interface ImageUploaderProps {
@@ -12,36 +12,31 @@ interface ImageUploaderProps {
   isAnalyzing?: boolean;
 }
 
-const ImageUploader: React.FC<ImageUploaderProps> = ({ onUpload, isAnalyzing }) => {
+const ImageUploader = memo<ImageUploaderProps>(({ onUpload, isAnalyzing }) => {
   // const [selectedFile, setSelectedFile] = useState<File | null>(null); // Removed unused state
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setError(null);
-    const file = event.target.files?.[0];
-    if (file) {
-      if (!file.type.startsWith('image/')) {
-        setError('Please select an image file.');
-        resetState();
-        return;
-      }
-
-      // setSelectedFile(file); // Removed unused state update
-      generatePreview(file);
-      convertToBase64(file);
+  const resetState = useCallback(() => {
+    // setSelectedFile(null); // Removed unused state update
+    setPreviewUrl(null);
+    if (galleryInputRef.current) {
+      galleryInputRef.current.value = '';
     }
-  };
+    if (cameraInputRef.current) {
+      cameraInputRef.current.value = '';
+    }
+  }, []);
 
-  const generatePreview = (file: File) => {
+  const generatePreview = useCallback((file: File) => {
     const reader = new FileReader();
     reader.onloadend = () => {
       setPreviewUrl(reader.result as string);
     };
     reader.readAsDataURL(file);
-  };
+  }, []);
 
   const convertToBase64 = useCallback((file: File) => {
     const reader = new FileReader();
@@ -59,23 +54,28 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onUpload, isAnalyzing }) 
       resetState();
     };
     reader.readAsDataURL(file);
-  }, [onUpload]);
+  }, [onUpload, resetState]);
 
-  const resetState = () => {
-    // setSelectedFile(null); // Removed unused state update
-    setPreviewUrl(null);
-    if (galleryInputRef.current) {
-      galleryInputRef.current.value = '';
-    }
-    if (cameraInputRef.current) {
-      cameraInputRef.current.value = '';
-    }
-  };
+  const handleFileChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    setError(null);
+    const file = event.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        setError('Please select an image file.');
+        resetState();
+        return;
+      }
 
-  const handleRemoveImage = () => {
+      // setSelectedFile(file); // Removed unused state update
+      generatePreview(file);
+      convertToBase64(file);
+    }
+  }, [convertToBase64, generatePreview, resetState]);
+
+  const handleRemoveImage = useCallback(() => {
     resetState();
     setError(null);
-  };
+  }, [resetState]);
 
   const handleDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -93,7 +93,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onUpload, isAnalyzing }) 
         setError('Please drop an image file.');
         resetState();
     }
-  }, [convertToBase64]); // Removed unnecessary onUpload dependency
+  }, [convertToBase64, generatePreview, resetState]); // Updated dependencies
 
   return (
     <Card>
@@ -158,7 +158,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onUpload, isAnalyzing }) 
           </div>
         ) : (
           <div className="relative group">
-            <Image
+            <OptimizedImage
               src={previewUrl}
               alt="Selected food preview"
               width={200}
@@ -183,6 +183,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onUpload, isAnalyzing }) 
       </CardContent>
     </Card>
   );
-};
+});
+
+ImageUploader.displayName = 'ImageUploader';
 
 export default ImageUploader;

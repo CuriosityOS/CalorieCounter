@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback, memo } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { formatTime } from '@/lib/utils';
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -16,11 +16,11 @@ import {
   Image as ImageIcon,
   Clock
 } from 'lucide-react';
-import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAnalyzeImage } from '@/hooks/useAnalyzeImage';
 import { useMeals } from '@/hooks/useMeals';
 import { useAuth } from '@/hooks/useAuth';
+import OptimizedImage from './OptimizedImage';
 // import { supabase } from '@/lib/supabase-client'; // Not needed after refactoring
 
 interface MealEditFormProps {
@@ -45,7 +45,7 @@ interface MealEditFormProps {
   onAiUpdate: () => void;
 }
 
-const MealEditForm: React.FC<MealEditFormProps> = ({ meal, onCancel, onSave, onAiUpdate }) => {
+const MealEditForm = memo<MealEditFormProps>(({ meal, onCancel, onSave, onAiUpdate }) => {
   const displayMealName = typeof meal.mealName === 'string' 
     ? meal.mealName 
     : meal.mealName.join(', ');
@@ -176,7 +176,9 @@ const MealEditForm: React.FC<MealEditFormProps> = ({ meal, onCancel, onSave, onA
       </div>
     </div>
   );
-};
+});
+
+MealEditForm.displayName = 'MealEditForm';
 
 interface MealHistoryProps { 
   limit?: number; 
@@ -196,7 +198,7 @@ export default function MealHistory({ limit, showTitle = true, className = "" }:
   const [showImageId, setShowImageId] = useState<string | null>(null);
   const analyzeMutation = useAnalyzeImage();
 
-  const mappedDateMeals = React.useMemo(() => {
+  const mappedDateMeals = useMemo(() => {
     if (!authUser) {
       return [];
     }
@@ -214,7 +216,7 @@ export default function MealHistory({ limit, showTitle = true, className = "" }:
   }, [todayMeals, authUser]);
   
   // Format meals from Supabase format to app format
-  const formattedMeals = React.useMemo(() => {
+  const formattedMeals = useMemo(() => {
     return mappedDateMeals.map(meal => ({
       id: meal.id,
       mealName: meal.meal_name || 'Unknown Meal',
@@ -228,14 +230,17 @@ export default function MealHistory({ limit, showTitle = true, className = "" }:
     }));
   }, [mappedDateMeals]);
   
-  const displayMeals = limit ? formattedMeals.slice(0, limit) : formattedMeals;
+  const displayMeals = useMemo(() => 
+    limit ? formattedMeals.slice(0, limit) : formattedMeals,
+    [formattedMeals, limit]
+  );
 
-  const handleEdit = (mealId: string) => {
+  const handleEdit = useCallback((mealId: string) => {
     setEditingMealId(mealId);
     setShowImageId(null); // Close image preview if open
-  };
+  }, []);
   
-  const handleDelete = async (mealId: string) => {
+  const handleDelete = useCallback(async (mealId: string) => {
     if (window.confirm('Are you sure you want to delete this meal?')) {
       try {
         // Try both approaches - direct and store
@@ -260,9 +265,9 @@ export default function MealHistory({ limit, showTitle = true, className = "" }:
         alert('Failed to delete meal. Please try again.');
       }
     }
-  };
+  }, [deleteMealFromSupabase, deleteMeal, refreshAll]);
   
-  const handleSaveEdit = async (mealId: string, updatedMeal: Omit<MealEditFormProps['meal'], 'id'>) => {
+  const handleSaveEdit = useCallback(async (mealId: string, updatedMeal: Omit<MealEditFormProps['meal'], 'id'>) => {
     try {
       // Convert app format to Supabase format
       const supabaseMeal = {
@@ -297,9 +302,9 @@ export default function MealHistory({ limit, showTitle = true, className = "" }:
       console.error('Failed to update meal:', err);
       alert('Failed to update meal. Please try again.');
     }
-  };
+  }, [updateMealInSupabase, updateMeal, refreshAll]);
   
-  const handleAiUpdate = async (description: string) => {
+  const handleAiUpdate = useCallback(async (description: string) => {
     // Get the currently edited meal
     const mealId = editingMealId;
     if (!mealId) return;
@@ -350,16 +355,16 @@ export default function MealHistory({ limit, showTitle = true, className = "" }:
       console.error('Failed to update meal with AI:', error);
       alert('Failed to update meal with AI. Please try again or update manually.');
     }
-  };
+  }, [editingMealId, mappedDateMeals, analyzeMutation, updateMealInSupabase, refreshAll]);
   
-  const handleToggleImage = (mealId: string) => {
+  const handleToggleImage = useCallback((mealId: string) => {
     if (showImageId === mealId) {
       setShowImageId(null);
     } else {
       setShowImageId(mealId);
       setEditingMealId(null); // Close editing if open
     }
-  };
+  }, [showImageId]);
 
   return (
     <Card className={className}>
@@ -479,7 +484,7 @@ export default function MealHistory({ limit, showTitle = true, className = "" }:
                             className="overflow-hidden mt-2"
                           >
                             <div className="relative rounded-md overflow-hidden bg-black/5 dark:bg-white/5">
-                              <Image
+                              <OptimizedImage
                                 src={meal.imageUrl}
                                 alt={displayMealName}
                                 width={400}
