@@ -18,7 +18,7 @@ export const measurePerformance = (name: string, fn: () => void) => {
   return 0;
 };
 
-export const measureAsyncPerformance = async (name: string, fn: () => Promise<any>) => {
+export const measureAsyncPerformance = async <T>(name: string, fn: () => Promise<T>) => {
   if (typeof window !== 'undefined' && window.performance) {
     const startTime = performance.now();
     const result = await fn();

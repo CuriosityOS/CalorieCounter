@@ -60,6 +60,7 @@ const OptimizedImage = memo<OptimizedImageProps>(({
         {isLoading && (
           <div className="absolute inset-0 animate-pulse bg-secondary/20 rounded-lg" />
         )}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={src}
           alt={alt}
