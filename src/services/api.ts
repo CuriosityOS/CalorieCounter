@@ -120,7 +120,7 @@ export const analyzeImage = async (imageBase64: string): Promise<NutritionInfo> 
   }
 
   const apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
-  const model = 'google/gemini-2.5-flash-preview'; // Updated to new model
+  const model = 'google/gemini-2.5-flash'; // Fixed model name - removed preview suffix
 
   // Check if this is a text-only analysis request
   const isTextAnalysis = imageBase64.startsWith('TEXTONLY_');
