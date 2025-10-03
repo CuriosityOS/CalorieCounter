@@ -9,7 +9,6 @@ import { Loader2, Send } from 'lucide-react';
 import { useAnalyzeImage } from '@/hooks/useAnalyzeImage';
 import NutritionDisplay from './NutritionDisplay';
 import { useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '@/hooks/useAuth';
 
 export default function FoodDescriptionAnalyzer() {
   const [description, setDescription] = useState<string>('');
@@ -18,7 +17,6 @@ export default function FoodDescriptionAnalyzer() {
   const setError = useState<Error | null>(null)[1];
   const analyzeImageMutation = useAnalyzeImage();
   const queryClient = useQueryClient();
-  const { user } = useAuth();
   
   const analyzeDescription = async () => {
     if (!description.trim()) return;
@@ -36,12 +34,6 @@ export default function FoodDescriptionAnalyzer() {
         onSuccess: async () => {
           // Invalidate any queries that fetch meals to force a refresh
           queryClient.invalidateQueries({ queryKey: ['meals'] });
-          
-          // Directly fetch meals to ensure immediate UI update
-          if (user?.id) {
-            queryClient.fetchQuery({ queryKey: ['meals', user.id] })
-              .catch(err => console.error('Error fetching meals after analysis:', err));
-          }
         }
       });
     } catch (err) {

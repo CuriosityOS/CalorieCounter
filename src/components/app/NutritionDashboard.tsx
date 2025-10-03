@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader } from '../ui/card';
 import NutritionCircles from './NutritionCircles';
 import DateNavigation from './DateNavigation';
 import { useMeals } from '@/hooks/useMeals';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface NutritionDashboardProps {
   selectedDate?: Date;
@@ -36,7 +37,8 @@ export default function NutritionDashboard({
   };
 
   // Using useMeals hook to get real-time nutrition data
-  const { dailyTotals, loading: mealsLoading } = useMeals();
+  const queryClient = useQueryClient();
+  const { dailyTotals, loading: mealsLoading } = useMeals(selectedDate);
   
   // Use user's custom targets if available, otherwise use app's default goals
   const targets = {
@@ -51,17 +53,14 @@ export default function NutritionDashboard({
     if (typeof window !== 'undefined') {
       const today = new Date().toISOString().split('T')[0];
       const lastDay = localStorage.getItem('last-active-day');
-      
+
       if (!lastDay || lastDay !== today) {
         localStorage.setItem('last-active-day', today);
         // Refresh data when a new day is detected using React Query invalidation
         const refreshData = async () => {
           try {
-            const { queryClient } = await import('@/providers/QueryProvider');
-            if (queryClient) {
-              queryClient.invalidateQueries({ queryKey: ['meals'] });
-              queryClient.invalidateQueries({ queryKey: ['user'] });
-            }
+            queryClient.invalidateQueries({ queryKey: ['meals'] });
+            queryClient.invalidateQueries({ queryKey: ['user'] });
           } catch (error) {
             console.error('Failed to refresh data:', error);
           }
@@ -69,7 +68,7 @@ export default function NutritionDashboard({
         refreshData();
       }
     }
-  }, []);
+  }, [queryClient]);
 
   return (
     <Card>

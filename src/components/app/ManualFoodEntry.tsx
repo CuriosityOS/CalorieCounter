@@ -11,7 +11,7 @@ import { useAppStore } from '@/store/useAppStore';
 import { useQueryClient } from '@tanstack/react-query';
 
 export default function ManualFoodEntry() {
-  const { addMeal } = useMeals();
+  const { addMeal } = useMeals(undefined, { skip: true });
   const refreshAll = useAppStore((state) => state.refreshAll);
   const queryClient = useQueryClient();
   
@@ -65,13 +65,6 @@ export default function ManualFoodEntry() {
       
       // Invalidate any queries that fetch meals to force a refresh
       queryClient.invalidateQueries({ queryKey: ['meals'] });
-      
-      // Directly fetch meals to ensure immediate UI update
-      const { user } = await import('@/hooks/useAuth').then(m => m.useAuth());
-      if (user?.id) {
-        queryClient.fetchQuery({ queryKey: ['meals', user.id] })
-          .catch(err => console.error('Error fetching meals after add:', err));
-      }
       
       // Refresh the app state as a fallback
       await refreshAll();
