@@ -25,7 +25,7 @@ class ApiError extends Error {
 
 export function useAnalyzeImage() {
   const { user } = useAuth();
-  const { addMeal: addMealToSupabase } = useMeals();
+  const { addMeal: addMealToSupabase } = useMeals(undefined, { skip: true });
   const refreshAll = useAppStore((state) => state.refreshAll);
   const queryClient = useQueryClient();
   
@@ -114,11 +114,7 @@ export function useAnalyzeImage() {
           if (mealSaved) {
             // Invalidate React Query cache to refresh meals list
             // Properly invalidate all related queries
-            queryClient.invalidateQueries({ queryKey: ['meals'] });
-            
-            // Directly fetch a fresh copy instead of waiting for automatic refetch
-            queryClient.fetchQuery({ queryKey: ['meals', user.id] })
-              .catch(error => console.error('Error fetching updated meals:', error));
+            queryClient.invalidateQueries({ queryKey: ['meals', user.id] });
             
             // Also refresh app store state as a fallback
             try {

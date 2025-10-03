@@ -7,11 +7,13 @@ import UserDashboard from "@/components/app/UserDashboard";
 import { useAppStore } from '@/store/useAppStore';
 import { useUser } from '@/hooks/useUser';
 import AuthGuard from '@/components/app/AuthGuard';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function DashboardPage() {
   const router = useRouter();
   const checkAndResetDaily = useAppStore((state) => state.checkAndResetDaily);
   const { user } = useUser();
+  const queryClient = useQueryClient();
   
   // Check if we need to reset daily nutrition counters
   useEffect(() => {
@@ -28,11 +30,8 @@ export default function DashboardPage() {
         // Use React Query invalidation instead of full page reload
         const refreshData = async () => {
           try {
-            const { queryClient } = await import('@/providers/QueryProvider');
-            if (queryClient) {
-              queryClient.invalidateQueries({ queryKey: ['meals'] });
-              queryClient.invalidateQueries({ queryKey: ['user'] });
-            }
+            queryClient.invalidateQueries({ queryKey: ['meals'] });
+            queryClient.invalidateQueries({ queryKey: ['user'] });
             checkAndResetDaily();
           } catch (error) {
             if (process.env.NODE_ENV === 'development') {
@@ -51,7 +50,7 @@ export default function DashboardPage() {
     };
     
     prefetchRoutes().catch(console.error);
-  }, [router, checkAndResetDaily]);
+  }, [router, checkAndResetDaily, queryClient]);
 
   return (
     <AuthGuard>
