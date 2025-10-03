@@ -44,6 +44,8 @@
 }
 
 :root {
+  --font-geist-sans: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-geist-mono: "Menlo", "SFMono-Regular", "Roboto Mono", "Courier New", monospace;
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);

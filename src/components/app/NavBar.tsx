@@ -12,7 +12,7 @@ import { Menu, X, History, Settings, LogOut, Home, RefreshCw } from 'lucide-reac
 import ThemeToggle from '../ui/theme-toggle';
 
 const navLinks = [
-  { href: '/', label: 'Dashboard', icon: Home },
+  { href: '/dashboard', label: 'Dashboard', icon: Home },
   { href: '/history', label: 'History', icon: History },
   { href: '/customize', label: 'Customize', icon: Settings },
 ];
@@ -55,11 +55,11 @@ export default function NavBar() {
           <ul className="flex space-x-1">
             {navLinks.map((link) => {
               const Icon = link.icon;
-              const isActive = pathname === link.href;
+              const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`);
               
               return (
                 <li key={link.href}>
-                  <a
+                  <Link
                     href={link.href}
                     className={cn(
                       "flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors w-full text-left",
@@ -70,7 +70,7 @@ export default function NavBar() {
                   >
                     <Icon className="mr-2 h-4 w-4" />
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               );
             })}
@@ -131,10 +131,10 @@ export default function NavBar() {
           <div className="space-y-1 px-4 py-3 pb-4">
             {navLinks.map((link) => {
               const Icon = link.icon;
-              const isActive = pathname === link.href;
+              const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`);
               
               return (
-                <a
+                <Link
                   key={link.href}
                   href={link.href}
                   onClick={() => setIsOpen(false)}
@@ -147,7 +147,7 @@ export default function NavBar() {
                 >
                   <Icon className="mr-3 h-5 w-5" />
                   {link.label}
-                </a>
+                </Link>
               );
             })}
             

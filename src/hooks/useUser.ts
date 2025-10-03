@@ -139,8 +139,8 @@ export function useUser() {
     console.log("useUser effect triggered, authUser:", authUser?.id);
     if (authUser) {
       console.log("Attempting to fetch user profile for:", authUser.id);
-      fetchUserProfile();
     }
+    fetchUserProfile();
   }, [fetchUserProfile, authUser]);
 
   const updateUserProfile = useCallback(async (updates: Partial<User>) => {

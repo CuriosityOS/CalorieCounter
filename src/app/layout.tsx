@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import QueryProvider from "@/providers/QueryProvider";
 import AuthGuard from "@/components/app/AuthGuard";
@@ -11,16 +10,6 @@ import DirectNavigationLinks from "./_components/DirectNavigationLinks";
 // Lazy load NavBar as it's not critical for initial render
 const NavBar = dynamic(() => import("@/components/app/NavBar"), {
   ssr: true,
-});
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
@@ -56,8 +45,6 @@ export default function RootLayout({
       </head>
       <body
         className={cn(
-          geistSans.variable,
-          geistMono.variable,
           "antialiased min-h-screen bg-background font-sans",
           "dark:bg-gradient-to-b dark:from-gray-900 dark:to-gray-950"
         )}

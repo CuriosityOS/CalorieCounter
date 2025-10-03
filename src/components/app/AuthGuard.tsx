@@ -8,8 +8,8 @@ interface AuthGuardProps {
   children: React.ReactNode;
 }
 
-const publicPaths = ['/login', '/signup', '/']; // Add home page to public paths
-const appPaths = ['/dashboard', '/history', '/customize'];
+const publicPaths = new Set(['/login', '/signup', '/']);
+const protectedPrefixes = ['/dashboard', '/history', '/customize'];
 
 export default function AuthGuard({ children }: AuthGuardProps) {
   const { user, loading } = useAuth();
@@ -29,29 +29,45 @@ export default function AuthGuard({ children }: AuthGuardProps) {
     // Skip auth check during initial loading
     if (loading) return;
 
-    const isPublicPath = publicPaths.includes(pathname);
-    const isAppPath = appPaths.includes(pathname);
-    
-    if (!user && !isPublicPath) {
-      // Not logged in and trying to access a protected route
-      console.log('Redirecting to login from:', pathname);
-      router.replace('/login');
-    } else if (user && isPublicPath && pathname !== '/') {
-      // Already logged in and trying to access login/signup
-      console.log('Redirecting to dashboard from:', pathname);
-      router.replace('/dashboard');
-    } else if (!isAppPath && !isPublicPath) {
-      // Handle invalid routes - redirect to dashboard if logged in, otherwise to landing page
-      console.log('Invalid route, redirecting from:', pathname);
-      if (user) {
-        router.replace('/dashboard');
-      } else {
-        router.replace('/');
+    const isPublicPath = publicPaths.has(pathname);
+    const isProtectedPath = protectedPrefixes.some(
+      (path) => pathname === path || pathname.startsWith(`${path}/`)
+    );
+
+    if (!user) {
+      if (isProtectedPath) {
+        console.log('Redirecting to login from:', pathname);
+        setIsAuthorized(false);
+        router.replace('/login');
+        return;
       }
-    } else {
-      // Either logged in and accessing protected route, or not logged in and accessing public route
+
+      if (!isPublicPath) {
+        console.log('Redirecting to landing page from:', pathname);
+        setIsAuthorized(false);
+        router.replace('/');
+        return;
+      }
+
       setIsAuthorized(true);
+      return;
     }
+
+    if (isPublicPath && pathname !== '/') {
+      console.log('Redirecting to dashboard from:', pathname);
+      setIsAuthorized(false);
+      router.replace('/dashboard');
+      return;
+    }
+
+    if (!isProtectedPath && !isPublicPath) {
+      console.log('Invalid route, redirecting to dashboard from:', pathname);
+      setIsAuthorized(false);
+      router.replace('/dashboard');
+      return;
+    }
+
+    setIsAuthorized(true);
   }, [user, loading, pathname, router]);
 
   // Show loading state only during initial auth check
