@@ -84,6 +84,16 @@ If you're experiencing authentication issues:
 - `npm run build` - Build the application for production
 - `npm run start` - Start the production server
 - `npm run lint` - Run ESLint to check code quality
+- `npm run cf:build` - Build the Worker bundle for Cloudflare
+- `npm run cf:deploy` - Deploy the Worker using Wrangler (requires Cloudflare credentials)
+
+## Cloudflare Deployment
+
+1. Install the Cloudflare CLI and authenticate: `npx wrangler login`.
+2. Configure any required environment variables via Wrangler (for example `wrangler secret put NEXT_PUBLIC_SUPABASE_URL`).
+3. Deploy the app: `npm run cf:deploy`.
+
+The deploy script runs `next-on-pages` to emit `.vercel/output` and then uses Wrangler to upload the generated Worker script plus static assets. Wrangler will execute the build command defined in `wrangler.toml` automatically during deployment.
 
 ## License
 

@@ -1,0 +1,15 @@
+name = "calorie-counter"
+main = ".vercel/output/static/_worker.js"
+compatibility_date = "2025-10-04"
+compatibility_flags = ["nodejs_compat"]
+
+[build]
+command = "npm run cf:build"
+
+[assets]
+directory = ".vercel/output/static"
+binding = "ASSETS"
+
+[vars]
+# NEXT_PUBLIC_SITE_URL and other public env values should be configured in Cloudflare
+# via Wrangler `--var` flags or dashboard secrets/settings.
