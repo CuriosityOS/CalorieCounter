@@ -1,12 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { memo } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-const Settings: React.FC = () => {
+const Settings: React.FC = memo(() => {
   const { darkMode } = useAppStore((state) => state.userPreferences);
   const nutritionGoals = useAppStore((state) => state.userPreferences.nutritionGoals);
   const { toggleDarkMode } = useAppStore();
@@ -60,6 +60,8 @@ const Settings: React.FC = () => {
       </CardContent>
     </Card>
   );
-};
+});
+
+Settings.displayName = 'Settings';
 
 export default Settings;

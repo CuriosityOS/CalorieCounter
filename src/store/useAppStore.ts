@@ -151,29 +151,20 @@ export const useAppStore = create<AppState>((set) => {
   const verifyDatabaseSetup = async () => {
     try {
       const { supabase } = await import('@/lib/supabase-client');
-      console.log('Verifying database tables...');
-      
+
       // Check if tables exist
       const tablesResponse = await supabase.from('users').select('id').limit(1);
       const mealsResponse = await supabase.from('meals').select('id').limit(1);
       const weightResponse = await supabase.from('weight_entries').select('id').limit(1);
-      
+
       const hasTableIssues = tablesResponse.error || mealsResponse.error || weightResponse.error;
-      
+
       if (hasTableIssues) {
-        console.error('Database tables might not be set up correctly. Check supabase_setup.sql');
-        console.error('Table check errors:', {
-          users: tablesResponse.error,
-          meals: mealsResponse.error,
-          weight_entries: weightResponse.error
-        });
         return false;
       }
-      
-      console.log('Database tables verified successfully');
+
       return true;
     } catch (err) {
-      console.error('Error verifying database tables:', err);
       return false;
     }
   };
@@ -183,24 +174,21 @@ export const useAppStore = create<AppState>((set) => {
     if (typeof window === 'undefined') return; // Skip on server
 
     try {
-      console.log('Loading all data from Supabase...');
-      
       // Use direct Supabase queries instead of hooks to avoid circular dependencies
       const { supabase } = await import('@/lib/supabase-client');
-      
+
       // Get auth session directly
       const { data: { session } } = await supabase.auth.getSession();
       const authUser = session?.user;
-      
+
       if (!authUser) {
-        console.log('User not authenticated, using default state');
         return;
       }
-      
+
       // Verify database setup
       const isDbReady = await verifyDatabaseSetup();
       if (!isDbReady) {
-        console.warn('Database setup verification failed, will try to continue anyway');
+        // Database setup verification failed, will try to continue anyway
       }
       
       // Load data directly from Supabase, not via hooks
@@ -249,13 +237,7 @@ export const useAppStore = create<AppState>((set) => {
       _dailyTotals = dailyTotals;
       _userData = userResponse.data;
       _weightEntries = weightResponse.data || [];
-      
-      console.log('Data loaded successfully:', { 
-        meals: _meals.length, 
-        userData: _userData ? 'found' : 'not found',
-        weightEntries: _weightEntries.length 
-      });
-      
+
       // Update Zustand store state
       set({
         meals: _meals,
@@ -284,7 +266,7 @@ export const useAppStore = create<AppState>((set) => {
         }
       });
     } catch (err) {
-      console.error('Failed to load data from Supabase:', err);
+      // Failed to load data from Supabase
     }
   };
 
@@ -346,10 +328,9 @@ export const useAppStore = create<AppState>((set) => {
         
         // Refresh app state data
         await loadAllData();
-        
+
         return formatMeal(data);
       } catch (err) {
-        console.error('Failed to add meal to Supabase:', err);
         throw err;
       }
     },
@@ -390,9 +371,8 @@ export const useAppStore = create<AppState>((set) => {
         
         // Refresh all data to update the UI
         await loadAllData();
-        
+
       } catch (err) {
-        console.error('Failed to update meal in Supabase:', err);
         throw err;
       }
     },
@@ -410,9 +390,8 @@ export const useAppStore = create<AppState>((set) => {
         
         // Refresh all data to update the UI
         await loadAllData();
-        
+
       } catch (err) {
-        console.error('Failed to delete meal from Supabase:', err);
         throw err;
       }
     },
@@ -450,9 +429,8 @@ export const useAppStore = create<AppState>((set) => {
         
         // Refresh all data to update the UI
         await loadAllData();
-        
+
       } catch (err) {
-        console.error('Failed to update nutrition goals in Supabase:', err);
         throw err;
       }
     },
@@ -477,9 +455,8 @@ export const useAppStore = create<AppState>((set) => {
         
         // Refresh all data to update the UI
         await loadAllData();
-        
+
       } catch (err) {
-        console.error('Failed to update user profile in Supabase:', err);
         throw err;
       }
     },
@@ -544,27 +521,23 @@ export const useAppStore = create<AppState>((set) => {
           await loadAllData();
         }
       } catch (err) {
-        console.error('Failed to delete weight entry from Supabase:', err);
         throw err;
       }
     },
-    
+
     // No-op function for compatibility
     toggleDarkMode: () => {
-      console.log('Dark mode toggle is now handled by the theme provider');
+      // Dark mode toggle is now handled by the theme provider
     },
-    
+
     // Simple function to check and reset at midnight
     checkAndResetDaily: () => {
       if (typeof window === 'undefined') return;
-      
+
       const today = new Date().toISOString().split('T')[0];
       const lastReset = window.localStorage.getItem('last-nutrition-reset') || '';
-      
+
       if (today !== lastReset) {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('New day detected, refreshing nutrition data');
-        }
         window.localStorage.setItem('last-nutrition-reset', today);
         // Don't use window.location.reload() since it's handled in the component
         loadAllData();

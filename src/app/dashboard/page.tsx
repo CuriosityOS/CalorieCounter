@@ -23,9 +23,6 @@ export default function DashboardPage() {
       const lastDay = localStorage.getItem('last-active-day');
       
       if (!lastDay || lastDay !== today) {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('New day detected in Dashboard page, refreshing data');
-        }
         localStorage.setItem('last-active-day', today);
         // Use React Query invalidation instead of full page reload
         const refreshData = async () => {
@@ -34,22 +31,22 @@ export default function DashboardPage() {
             queryClient.invalidateQueries({ queryKey: ['user'] });
             checkAndResetDaily();
           } catch (error) {
-            if (process.env.NODE_ENV === 'development') {
-              console.error('Failed to refresh data:', error);
-            }
+            // Failed to refresh data
           }
         };
         refreshData();
       }
     }
-    
+
     // Force prefetch other routes to ensure navigation works correctly
     const prefetchRoutes = async () => {
       router?.prefetch('/history');
       router?.prefetch('/customize');
     };
-    
-    prefetchRoutes().catch(console.error);
+
+    prefetchRoutes().catch(() => {
+      // Prefetch failed
+    });
   }, [router, checkAndResetDaily, queryClient]);
 
   return (

@@ -34,7 +34,6 @@ export function useAuth(): UseAuthReturn {
           setUser(session.user);
         }
       } catch (err) {
-        console.error('Error fetching user:', err);
         setError(err instanceof Error ? err : new Error(String(err)));
       } finally {
         setLoading(false);
@@ -63,9 +62,8 @@ export function useAuth(): UseAuthReturn {
         email,
         password,
       }).catch(() => ({ data: null, error: new Error('Invalid credentials') }));
-      
+
       if (!signInError) {
-        console.log('Direct sign-in successful:', signInData?.user);
         router.push('/');
         return;
       }
@@ -79,16 +77,13 @@ export function useAuth(): UseAuthReturn {
       if (signUpError) {
         throw signUpError;
       }
-      
-      console.log('Account created:', data);
-      
+
       if (!data.user) {
         throw new Error('Failed to create account');
       }
-      
+
       throw new Error('Please check your email to confirm your account before signing in.');
     } catch (err) {
-      console.error('Error signing up:', err);
       setError(err instanceof Error ? err : new Error(String(err)));
     } finally {
       setLoading(false);
@@ -108,11 +103,9 @@ export function useAuth(): UseAuthReturn {
       if (error) {
         throw error;
       }
-      
-      console.log('Sign in successful, user:', data?.user);
+
       router.push('/');
     } catch (err) {
-      console.error('Error signing in:', err);
       setError(err instanceof Error ? err : new Error(String(err)));
       throw err;
     } finally {
@@ -123,17 +116,16 @@ export function useAuth(): UseAuthReturn {
   const signOut = useCallback(async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const { error } = await supabase.auth.signOut();
-      
+
       if (error) {
         throw error;
       }
-      
+
       router.push('/login');
     } catch (err) {
-      console.error('Error signing out:', err);
       setError(err instanceof Error ? err : new Error(String(err)));
     } finally {
       setLoading(false);
@@ -143,17 +135,16 @@ export function useAuth(): UseAuthReturn {
   const resetPassword = useCallback(async (email: string) => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email);
-      
+
       if (error) {
         throw error;
       }
-      
+
       setError(new Error('Password reset functionality has been disabled in this version.'));
     } catch (err) {
-      console.error('Error resetting password:', err);
       setError(err instanceof Error ? err : new Error(String(err)));
     } finally {
       setLoading(false);

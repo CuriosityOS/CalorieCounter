@@ -198,26 +198,13 @@ export default function MealHistory({ limit, showTitle = true, className = "" }:
   const [showImageId, setShowImageId] = useState<string | null>(null);
   const analyzeMutation = useAnalyzeImage();
 
-  const mappedDateMeals = useMemo(() => {
+  // Optimize: Combine all three data transformations into a single memoization
+  const displayMeals = useMemo(() => {
     if (!authUser) {
       return [];
     }
-    return todayMeals.map(meal => ({
-      id: meal.id,
-      meal_name: meal.meal_name || 'Unknown Meal',
-      ingredients: meal.ingredients || [],
-      calories: meal.calories || 0,
-      protein: meal.protein || 0,
-      carbs: meal.carbs || 0,
-      fat: meal.fat || 0,
-      created_at: meal.created_at,
-      image_url: meal.image_url || undefined,
-    }));
-  }, [todayMeals, authUser]);
-  
-  // Format meals from Supabase format to app format
-  const formattedMeals = useMemo(() => {
-    return mappedDateMeals.map(meal => ({
+
+    const formattedMeals = todayMeals.map(meal => ({
       id: meal.id,
       mealName: meal.meal_name || 'Unknown Meal',
       ingredients: meal.ingredients || [],
@@ -227,13 +214,14 @@ export default function MealHistory({ limit, showTitle = true, className = "" }:
       fat: meal.fat || 0,
       timestamp: new Date(meal.created_at).getTime(),
       imageUrl: meal.image_url || undefined,
+      // Keep original fields for compatibility
+      meal_name: meal.meal_name || 'Unknown Meal',
+      created_at: meal.created_at,
+      image_url: meal.image_url || undefined,
     }));
-  }, [mappedDateMeals]);
-  
-  const displayMeals = useMemo(() => 
-    limit ? formattedMeals.slice(0, limit) : formattedMeals,
-    [formattedMeals, limit]
-  );
+
+    return limit ? formattedMeals.slice(0, limit) : formattedMeals;
+  }, [todayMeals, authUser, limit]);
 
   const handleEdit = useCallback((mealId: string) => {
     setEditingMealId(mealId);
@@ -244,24 +232,17 @@ export default function MealHistory({ limit, showTitle = true, className = "" }:
     if (window.confirm('Are you sure you want to delete this meal?')) {
       try {
         // Try both approaches - direct and store
-        console.log('Deleting meal:', mealId);
-        
         try {
           // Direct Supabase approach
           await deleteMealFromSupabase(mealId);
-          console.log('Meal deleted via Supabase hook');
         } catch (directError) {
-          console.error('Error deleting meal via direct method:', directError);
-          
           // Fallback to store method
           await deleteMeal(mealId);
-          console.log('Meal deleted via store');
         }
-        
+
         // Refresh everything
         refreshAll();
       } catch (err) {
-        console.error('Failed to delete meal:', err);
         alert('Failed to delete meal. Please try again.');
       }
     }
@@ -271,8 +252,8 @@ export default function MealHistory({ limit, showTitle = true, className = "" }:
     try {
       // Convert app format to Supabase format
       const supabaseMeal = {
-        meal_name: Array.isArray(updatedMeal.mealName) 
-          ? updatedMeal.mealName[0] 
+        meal_name: Array.isArray(updatedMeal.mealName)
+          ? updatedMeal.mealName[0]
           : updatedMeal.mealName,
         ingredients: updatedMeal.ingredients,
         calories: updatedMeal.calories,
@@ -280,26 +261,19 @@ export default function MealHistory({ limit, showTitle = true, className = "" }:
         carbs: updatedMeal.carbs,
         fat: updatedMeal.fat,
       };
-      
-      console.log('Updating meal:', mealId, supabaseMeal);
-      
+
       try {
         // Direct Supabase approach
         await updateMealInSupabase(mealId, supabaseMeal);
-        console.log('Meal updated via Supabase hook');
       } catch (directError) {
-        console.error('Error updating meal via direct method:', directError);
-        
         // Fallback to store method
         await updateMeal(mealId, updatedMeal);
-        console.log('Meal updated via store');
       }
-      
+
       // Refresh everything
       refreshAll();
       setEditingMealId(null);
     } catch (err) {
-      console.error('Failed to update meal:', err);
       alert('Failed to update meal. Please try again.');
     }
   }, [updateMealInSupabase, updateMeal, refreshAll]);
@@ -308,21 +282,17 @@ export default function MealHistory({ limit, showTitle = true, className = "" }:
     // Get the currently edited meal
     const mealId = editingMealId;
     if (!mealId) return;
-    
-    const meal = mappedDateMeals.find(m => m.id === mealId);
+
+    const meal = displayMeals.find(m => m.id === mealId);
     if (!meal) return;
-    
+
     try {
       // Create a special base64 encoding that indicates this is a text description
       const textBase64 = 'TEXTONLY_' + Buffer.from(description).toString('base64');
-      
-      console.log('Sending AI update with description:', description);
-      
+
       // Begin the text-based analysis with the user's correction
       analyzeMutation.mutate(textBase64, {
         onSuccess: async (result) => {
-          console.log('AI text analysis result:', result);
-          
           // Create the update object
           const updateData = {
             meal_name: (Array.isArray(result.mealName) ? result.mealName[0] : result.mealName) || meal.meal_name,
@@ -332,30 +302,26 @@ export default function MealHistory({ limit, showTitle = true, className = "" }:
             carbs: result.carbs || meal.carbs,
             fat: result.fat || meal.fat,
           };
-          
+
           // Update the meal with the new info
           try {
             await updateMealInSupabase(mealId, updateData);
-            console.log('Meal updated with AI results');
             refreshAll();
           } catch (updateError) {
-            console.error('Error updating meal with AI results:', updateError);
             alert('Failed to update meal with AI results. Please try manually.');
           }
         },
         onError: (error) => {
-          console.error('AI analysis failed:', error);
           alert('AI analysis failed. Please try again or update manually.');
         }
       });
-      
+
       // Close the edit form
       setEditingMealId(null);
     } catch (error) {
-      console.error('Failed to update meal with AI:', error);
       alert('Failed to update meal with AI. Please try again or update manually.');
     }
-  }, [editingMealId, mappedDateMeals, analyzeMutation, updateMealInSupabase, refreshAll]);
+  }, [editingMealId, displayMeals, analyzeMutation, updateMealInSupabase, refreshAll]);
   
   const handleToggleImage = useCallback((mealId: string) => {
     if (showImageId === mealId) {

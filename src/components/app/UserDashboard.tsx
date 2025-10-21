@@ -40,7 +40,6 @@ export default function UserDashboard() {
   useEffect(() => {
     router.prefetch('/history');
     router.prefetch('/customize');
-    console.log('Prefetching history and customize routes');
   }, [router]);
 
   const {
@@ -51,7 +50,6 @@ export default function UserDashboard() {
   } = analyzeImageMutation;
 
   const handleImageUpload = useCallback((base64Image: string) => {
-    console.log("Image ready for analysis, triggering mutation...");
     triggerAnalysis(base64Image);
   }, [triggerAnalysis]);
 
