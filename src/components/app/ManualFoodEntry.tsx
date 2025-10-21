@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,7 @@ import { useMeals } from '@/hooks/useMeals';
 import { useAppStore } from '@/store/useAppStore';
 import { useQueryClient } from '@tanstack/react-query';
 
-export default function ManualFoodEntry() {
+const ManualFoodEntry = memo(function ManualFoodEntry() {
   const { addMeal } = useMeals(undefined, { skip: true });
   const refreshAll = useAppStore((state) => state.refreshAll);
   const queryClient = useQueryClient();
@@ -201,4 +201,6 @@ export default function ManualFoodEntry() {
       </CardContent>
     </Card>
   );
-}
+});
+
+export default ManualFoodEntry;

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import PulsingEyeAnimation from './PulsingEyeAnimation';
 
 // Updated interface to match api.ts
@@ -17,7 +17,7 @@ interface NutritionDisplayProps {
   error?: Error | null;
 }
 
-const NutritionDisplay: React.FC<NutritionDisplayProps> = ({ data, isLoading, error }) => {
+const NutritionDisplay: React.FC<NutritionDisplayProps> = memo(({ data, isLoading, error }) => {
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center p-4">
@@ -62,6 +62,8 @@ const NutritionDisplay: React.FC<NutritionDisplayProps> = ({ data, isLoading, er
       </div>
     </div>
   );
-};
+});
+
+NutritionDisplay.displayName = 'NutritionDisplay';
 
 export default NutritionDisplay;

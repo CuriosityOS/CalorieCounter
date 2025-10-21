@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,7 +10,7 @@ import { useAnalyzeImage } from '@/hooks/useAnalyzeImage';
 import NutritionDisplay from './NutritionDisplay';
 import { useQueryClient } from '@tanstack/react-query';
 
-export default function FoodDescriptionAnalyzer() {
+const FoodDescriptionAnalyzer = memo(function FoodDescriptionAnalyzer() {
   const [description, setDescription] = useState<string>('');
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   // We'll use the error state from the mutation
@@ -37,7 +37,6 @@ export default function FoodDescriptionAnalyzer() {
         }
       });
     } catch (err) {
-      console.error('Error analyzing food description:', err);
       setError(err instanceof Error ? err : new Error(String(err)));
     } finally {
       setIsAnalyzing(false);
@@ -95,4 +94,6 @@ export default function FoodDescriptionAnalyzer() {
       </CardContent>
     </Card>
   );
-}
+});
+
+export default FoodDescriptionAnalyzer;

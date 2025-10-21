@@ -61,8 +61,8 @@ export default function NutritionDashboard({
           try {
             queryClient.invalidateQueries({ queryKey: ['meals'] });
             queryClient.invalidateQueries({ queryKey: ['user'] });
-          } catch (error) {
-            console.error('Failed to refresh data:', error);
+          } catch {
+            // Failed to refresh data
           }
         };
         refreshData();

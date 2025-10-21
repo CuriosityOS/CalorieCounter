@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { memo } from 'react';
 import { motion } from 'framer-motion';
 
 interface CircularProgressProps {
@@ -15,7 +15,7 @@ interface CircularProgressProps {
   maxValueText?: string; // Max value to display (formatted)
 }
 
-export default function CircularProgress({
+const CircularProgress = memo(function CircularProgress({
   value,
   size = 120,
   strokeWidth = 8,
@@ -90,4 +90,6 @@ export default function CircularProgress({
       )}
     </div>
   );
-}
+});
+
+export default CircularProgress;

@@ -35,7 +35,6 @@ class ApiError extends Error {
 
 const parseNutritionResponse = (rawContent: string): NutritionInfo => {
   const originalRawResponse = rawContent;
-  console.log("[PARSER V4] Raw content received:", originalRawResponse);
 
   let jsonString = null;
   const firstBraceIndex = originalRawResponse.indexOf('{');
@@ -43,16 +42,11 @@ const parseNutritionResponse = (rawContent: string): NutritionInfo => {
 
   if (firstBraceIndex !== -1 && lastBraceIndex !== -1 && lastBraceIndex > firstBraceIndex) {
     jsonString = originalRawResponse.substring(firstBraceIndex, lastBraceIndex + 1);
-    console.log("[PARSER V4] Extracted potential JSON between first '{' and last '}':", jsonString);
-  } else {
-    console.warn("[PARSER V4] Could not find opening and closing braces '{...}' in the response.");
   }
 
   if (jsonString) {
-    console.log("[PARSER V4] Attempting JSON.parse on extracted string.");
     try {
       const data = JSON.parse(jsonString);
-      console.log("[PARSER V4] JSON.parse successful:", data);
 
       // Validate required fields + new mealName (optional but check type if present)
       if (typeof data.calories !== 'number' || typeof data.protein !== 'number' ||
@@ -60,7 +54,6 @@ const parseNutritionResponse = (rawContent: string): NutritionInfo => {
           (data.mealName && typeof data.mealName !== 'string' && !Array.isArray(data.mealName)) || // Check mealName type
           (data.ingredients && !Array.isArray(data.ingredients)) // Check ingredients type
          ) {
-        console.warn("[PARSER V4] Parsed JSON missing required fields or has incorrect types:", data);
         throw new Error('Parsed JSON missing required fields or has incorrect types.');
       }
       // Ensure ingredients is always an array if present
@@ -69,18 +62,13 @@ const parseNutritionResponse = (rawContent: string): NutritionInfo => {
       }
       return { ...data, rawResponse: originalRawResponse };
 
-    } catch (jsonError) {
-      console.error(`[PARSER V4] JSON.parse failed:`, jsonError);
-      console.error(`[PARSER V4] Content that failed JSON.parse:`, jsonString);
-      console.warn("[PARSER V4] Falling back to text extraction due to JSON parse error.");
+    } catch {
+      // JSON parsing failed, fall through to regex extraction
     }
-  } else {
-      console.warn("[PARSER V4] Skipping JSON.parse because extraction failed. Proceeding to fallback.");
   }
 
   // Fallback logic (less likely to work for structured data like mealName/ingredients)
   try {
-    console.warn("[PARSER V4] Attempting fallback text extraction on raw content (may be less accurate)...");
     const caloriesMatch = originalRawResponse.match(/calories":?\s*(\d+)/i);
     const proteinMatch = originalRawResponse.match(/protein":?\s*(\d+)/i);
     const carbsMatch = originalRawResponse.match(/carbs":?\s*(\d+)/i);
@@ -89,7 +77,6 @@ const parseNutritionResponse = (rawContent: string): NutritionInfo => {
     const mealNameMatch = originalRawResponse.match(/mealName":?\s*"([^"]+)"/i);
 
     if (caloriesMatch && proteinMatch && carbsMatch && fatMatch) {
-       console.log("[PARSER V4] Fallback extraction successful (basic fields).");
       return {
         calories: parseInt(caloriesMatch[1], 10),
         protein: parseInt(proteinMatch[1], 10),
@@ -100,11 +87,9 @@ const parseNutritionResponse = (rawContent: string): NutritionInfo => {
         rawResponse: originalRawResponse,
       };
     } else {
-        console.warn("[PARSER V4] Fallback extraction failed.");
         throw new Error('Fallback text extraction failed.');
     }
   } catch { // Removed unused var
-    console.error("[PARSER V4] Could not extract nutrition info via JSON or fallback:", originalRawResponse);
     throw new Error(`Failed to parse nutrition information from AI response. Raw: ${originalRawResponse}`);
   }
 };
@@ -221,14 +206,12 @@ Example: {"mealName": "Cheeseburger with Fries", "ingredients": ["Beef Patty", "
       } catch { // Removed unused var
         errorInfo = { rawError: errorBody };
       }
-      console.error("OpenRouter API Error:", response.status, errorInfo);
       throw new ApiError(`API request failed with status ${response.status}`, response.status, errorInfo);
     }
 
     const data: OpenRouterResponse = await response.json();
 
     if (!data.choices || data.choices.length === 0 || !data.choices[0].message?.content) {
-      console.error("Invalid response structure from OpenRouter:", data);
       throw new ApiError('Invalid response structure from API.', 500, data);
     }
 
@@ -236,7 +219,6 @@ Example: {"mealName": "Cheeseburger with Fries", "ingredients": ["Beef Patty", "
     return parseNutritionResponse(content);
 
   } catch (error) {
-    console.error('Error calling OpenRouter API:', error);
     if (error instanceof ApiError) {
       throw error;
     }
