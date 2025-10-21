@@ -58,7 +58,7 @@ export function useAuth(): UseAuthReturn {
     
     try {
       // Try sign-in first in case the account already exists
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+      const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       }).catch(() => ({ data: null, error: new Error('Invalid credentials') }));
@@ -93,13 +93,13 @@ export function useAuth(): UseAuthReturn {
   const signIn = useCallback(async (email: string, password: string) => {
     setLoading(true);
     setError(null);
-    
+
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-      
+
       if (error) {
         throw error;
       }

@@ -62,7 +62,7 @@ const parseNutritionResponse = (rawContent: string): NutritionInfo => {
       }
       return { ...data, rawResponse: originalRawResponse };
 
-    } catch (jsonError) {
+    } catch {
       // JSON parsing failed, fall through to regex extraction
     }
   }

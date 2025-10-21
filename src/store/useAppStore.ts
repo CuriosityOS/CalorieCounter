@@ -164,7 +164,7 @@ export const useAppStore = create<AppState>((set) => {
       }
 
       return true;
-    } catch (err) {
+    } catch {
       return false;
     }
   };
@@ -265,7 +265,7 @@ export const useAppStore = create<AppState>((set) => {
           lastDailyReset: new Date().toISOString().split('T')[0],
         }
       });
-    } catch (err) {
+    } catch {
       // Failed to load data from Supabase
     }
   };

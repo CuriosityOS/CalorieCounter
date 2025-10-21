@@ -235,14 +235,14 @@ export default function MealHistory({ limit, showTitle = true, className = "" }:
         try {
           // Direct Supabase approach
           await deleteMealFromSupabase(mealId);
-        } catch (directError) {
+        } catch {
           // Fallback to store method
           await deleteMeal(mealId);
         }
 
         // Refresh everything
         refreshAll();
-      } catch (err) {
+      } catch {
         alert('Failed to delete meal. Please try again.');
       }
     }
@@ -265,7 +265,7 @@ export default function MealHistory({ limit, showTitle = true, className = "" }:
       try {
         // Direct Supabase approach
         await updateMealInSupabase(mealId, supabaseMeal);
-      } catch (directError) {
+      } catch {
         // Fallback to store method
         await updateMeal(mealId, updatedMeal);
       }
@@ -273,7 +273,7 @@ export default function MealHistory({ limit, showTitle = true, className = "" }:
       // Refresh everything
       refreshAll();
       setEditingMealId(null);
-    } catch (err) {
+    } catch {
       alert('Failed to update meal. Please try again.');
     }
   }, [updateMealInSupabase, updateMeal, refreshAll]);
@@ -307,18 +307,18 @@ export default function MealHistory({ limit, showTitle = true, className = "" }:
           try {
             await updateMealInSupabase(mealId, updateData);
             refreshAll();
-          } catch (updateError) {
+          } catch {
             alert('Failed to update meal with AI results. Please try manually.');
           }
         },
-        onError: (error) => {
+        onError: () => {
           alert('AI analysis failed. Please try again or update manually.');
         }
       });
 
       // Close the edit form
       setEditingMealId(null);
-    } catch (error) {
+    } catch {
       alert('Failed to update meal with AI. Please try again or update manually.');
     }
   }, [editingMealId, displayMeals, analyzeMutation, updateMealInSupabase, refreshAll]);

@@ -30,7 +30,7 @@ export default function DashboardPage() {
             queryClient.invalidateQueries({ queryKey: ['meals'] });
             queryClient.invalidateQueries({ queryKey: ['user'] });
             checkAndResetDaily();
-          } catch (error) {
+          } catch {
             // Failed to refresh data
           }
         };
