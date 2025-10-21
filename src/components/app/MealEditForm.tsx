@@ -98,38 +98,42 @@ export default function MealEditForm({ meal, onCancel, onSave, onAiUpdate }: Mea
             <label className="text-xs text-muted-foreground mb-1 block">Calories</label>
             <Input
               type="number"
+              step="0.1"
               value={calories}
-              onChange={(e) => setCalories(Math.max(0, parseInt(e.target.value) || 0))}
+              onChange={(e) => setCalories(Math.max(0, parseFloat(e.target.value) || 0))}
               className="w-full px-2 py-1 text-sm rounded border bg-background"
             />
           </div>
-          
+
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">Protein (g)</label>
             <Input
               type="number"
+              step="0.1"
               value={protein}
-              onChange={(e) => setProtein(Math.max(0, parseInt(e.target.value) || 0))}
+              onChange={(e) => setProtein(Math.max(0, parseFloat(e.target.value) || 0))}
               className="w-full px-2 py-1 text-sm rounded border bg-background"
             />
           </div>
-          
+
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">Carbs (g)</label>
             <Input
               type="number"
+              step="0.1"
               value={carbs}
-              onChange={(e) => setCarbs(Math.max(0, parseInt(e.target.value) || 0))}
+              onChange={(e) => setCarbs(Math.max(0, parseFloat(e.target.value) || 0))}
               className="w-full px-2 py-1 text-sm rounded border bg-background"
             />
           </div>
-          
+
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">Fat (g)</label>
             <Input
               type="number"
+              step="0.1"
               value={fat}
-              onChange={(e) => setFat(Math.max(0, parseInt(e.target.value) || 0))}
+              onChange={(e) => setFat(Math.max(0, parseFloat(e.target.value) || 0))}
               className="w-full px-2 py-1 text-sm rounded border bg-background"
             />
           </div>

@@ -69,19 +69,19 @@ const parseNutritionResponse = (rawContent: string): NutritionInfo => {
 
   // Fallback logic (less likely to work for structured data like mealName/ingredients)
   try {
-    const caloriesMatch = originalRawResponse.match(/calories":?\s*(\d+)/i);
-    const proteinMatch = originalRawResponse.match(/protein":?\s*(\d+)/i);
-    const carbsMatch = originalRawResponse.match(/carbs":?\s*(\d+)/i);
-    const fatMatch = originalRawResponse.match(/fat":?\s*(\d+)/i);
+    const caloriesMatch = originalRawResponse.match(/calories":?\s*(\d+(?:\.\d+)?)/i);
+    const proteinMatch = originalRawResponse.match(/protein":?\s*(\d+(?:\.\d+)?)/i);
+    const carbsMatch = originalRawResponse.match(/carbs":?\s*(\d+(?:\.\d+)?)/i);
+    const fatMatch = originalRawResponse.match(/fat":?\s*(\d+(?:\.\d+)?)/i);
     // Basic fallback for mealName (less reliable)
     const mealNameMatch = originalRawResponse.match(/mealName":?\s*"([^"]+)"/i);
 
     if (caloriesMatch && proteinMatch && carbsMatch && fatMatch) {
       return {
-        calories: parseInt(caloriesMatch[1], 10),
-        protein: parseInt(proteinMatch[1], 10),
-        carbs: parseInt(carbsMatch[1], 10),
-        fat: parseInt(fatMatch[1], 10),
+        calories: parseFloat(caloriesMatch[1]),
+        protein: parseFloat(proteinMatch[1]),
+        carbs: parseFloat(carbsMatch[1]),
+        fat: parseFloat(fatMatch[1]),
         mealName: mealNameMatch ? mealNameMatch[1] : undefined, // Add extracted mealName if found
         // Ingredients fallback is too complex/unreliable via regex
         rawResponse: originalRawResponse,

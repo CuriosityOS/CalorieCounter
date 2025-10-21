@@ -54,10 +54,10 @@ const ManualFoodEntry = memo(function ManualFoodEntry() {
       
       const mealData = {
         meal_name: mealName,
-        calories: parseInt(calories),
-        protein: parseInt(protein),
-        carbs: parseInt(carbs),
-        fat: parseInt(fat),
+        calories: parseFloat(calories),
+        protein: parseFloat(protein),
+        carbs: parseFloat(carbs),
+        fat: parseFloat(fat),
         ingredients: ingredientsArray,
       };
       
@@ -112,6 +112,7 @@ const ManualFoodEntry = memo(function ManualFoodEntry() {
               <Input
                 id="calories"
                 type="number"
+                step="0.1"
                 placeholder="e.g., 350"
                 value={calories}
                 onChange={(e) => setCalories(e.target.value)}
@@ -123,6 +124,7 @@ const ManualFoodEntry = memo(function ManualFoodEntry() {
               <Input
                 id="protein"
                 type="number"
+                step="0.1"
                 placeholder="e.g., 25"
                 value={protein}
                 onChange={(e) => setProtein(e.target.value)}
@@ -134,6 +136,7 @@ const ManualFoodEntry = memo(function ManualFoodEntry() {
               <Input
                 id="carbs"
                 type="number"
+                step="0.1"
                 placeholder="e.g., 30"
                 value={carbs}
                 onChange={(e) => setCarbs(e.target.value)}
@@ -145,6 +148,7 @@ const ManualFoodEntry = memo(function ManualFoodEntry() {
               <Input
                 id="fat"
                 type="number"
+                step="0.1"
                 placeholder="e.g., 15"
                 value={fat}
                 onChange={(e) => setFat(e.target.value)}
